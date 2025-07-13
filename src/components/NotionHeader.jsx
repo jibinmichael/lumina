@@ -227,6 +227,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             onClick={handleSidebarClick}
             size="small"
             sx={{
+              position: 'relative',
               color: '#d1d5db',
               '&:hover': {
                 bgcolor: 'transparent',
@@ -235,6 +236,20 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             }}
           >
             <MenuOpen sx={{ fontSize: 16 }} />
+            {/* Notification circle indicator */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 2,
+                right: 2,
+                width: 6,
+                height: 6,
+                bgcolor: '#2196f3',
+                borderRadius: '50%',
+                border: '1px solid white',
+                zIndex: 1,
+              }}
+            />
           </IconButton>
         </Tooltip>
       </Box>
