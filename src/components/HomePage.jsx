@@ -16,6 +16,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
         await boardStore.initialize()
       }
       const allBoards = boardStore.getBoards()
+      console.log('📋 Loaded boards:', allBoards.map(b => ({ id: b.id, name: b.name, isStarred: b.isStarred })))
       setBoards(allBoards)
     }
     loadBoards()
@@ -42,6 +43,9 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   // Separate and sort boards
   const starredBoards = filteredBoards.filter(board => board.isStarred)
   const unstarredBoards = filteredBoards.filter(board => !board.isStarred)
+  
+  console.log('⭐ Starred boards:', starredBoards.length)
+  console.log('📄 Unstarred boards:', unstarredBoards.length)
 
   // Group unstarred boards by date
   const groupBoardsByDate = (boards) => {
@@ -80,18 +84,15 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   }
 
   const handleDeleteBoard = async (boardId) => {
-    const board = boards.find(b => b.id === boardId)
-    if (window.confirm(`Are you sure you want to delete "${board?.name || 'this board'}"?`)) {
-      console.log('🗑️ Deleting board:', boardId)
-      const result = await boardStore.deleteBoard(boardId)
-      if (!result.success) {
-        console.error('Failed to delete board:', result.error)
-        alert('Failed to delete board. Please try again.')
-      } else {
-        console.log('✅ Board deleted successfully')
-      }
-      // Boards will be reloaded via the change listener
+    console.log('🗑️ Deleting board:', boardId)
+    const result = await boardStore.deleteBoard(boardId)
+    if (!result.success) {
+      console.error('Failed to delete board:', result.error)
+      alert('Failed to delete board. Please try again.')
+    } else {
+      console.log('✅ Board deleted successfully')
     }
+    // Boards will be reloaded via the change listener
   }
 
   const handleNewBoard = async () => {
