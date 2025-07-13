@@ -1,0 +1,75 @@
+/* ReactFlow Controls Custom Styling */
+.react-flow__controls {
+  position: absolute !important;
+  bottom: 16px !important;
+  right: 20px !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 10 !important;
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15) !important;
+  padding: 4px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  width: auto !important;
+  height: auto !important;
+  border: none !important;
+}
+
+.react-flow__controls button {
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin: 2px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background-color 0.2s !important;
+  color: #333333 !important;
+}
+
+.react-flow__controls button:hover {
+  background: #f5f5f5 !important;
+}
+
+.react-flow__controls button:active {
+  background: #e0e0e0 !important;
+}
+
+.react-flow__controls button svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* ReactFlow Handle (connection dot) styling - Maximum specificity */
+.react-flow .react-flow__handle.react-flow__handle-right.react-flow__handle-source {
+  width: 16px !important;
+  height: 16px !important;
+  background: #f8f9fa !important;
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+  right: -16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+}
+
+.react-flow .react-flow__handle.react-flow__handle-right.react-flow__handle-source:hover {
+  background: #e5e7eb !important;
+}
+
+/* ReactFlow Edge (connection line) styling - 1px dotted */
+.react-flow__edge-path {
+  stroke: #9ca3af !important;
+  stroke-width: 1px !important;
+  stroke-dasharray: 2,2 !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #2196f3 !important;
+  stroke-width: 2px !important;
+} 
