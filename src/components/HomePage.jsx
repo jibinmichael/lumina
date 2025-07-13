@@ -6,6 +6,7 @@ import { boardStore } from '../stores/boardStore'
 const HomePage = ({ onStartThinking, onSelectBoard }) => {
   const [boards, setBoards] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Load boards
   useEffect(() => {
@@ -20,14 +21,16 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
     loadBoards()
 
     // Listen for board changes
-    const unsubscribe = boardStore.addChangeListener((event) => {
+    const unsubscribe = boardStore.addChangeListener((event, data) => {
+      console.log('📢 Board store event:', event, data)
       if (event === 'board_star_toggled' || event === 'board_deleted' || event === 'board_created') {
+        console.log('🔄 Reloading boards after:', event)
         loadBoards()
       }
     })
 
     return () => {
-      boardStore.removeChangeListener(unsubscribe)
+      unsubscribe()
     }
   }, [])
 
@@ -65,18 +68,27 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
 
   // Handle board actions
   const handleStarToggle = async (boardId) => {
+    console.log('🌟 Toggling star for board:', boardId)
     const result = await boardStore.toggleBoardStar(boardId)
     if (!result.success) {
       console.error('Failed to toggle star:', result.error)
+      alert('Failed to update board. Please try again.')
+    } else {
+      console.log('✅ Star toggled successfully:', result.isStarred)
     }
     // Boards will be reloaded via the change listener
   }
 
   const handleDeleteBoard = async (boardId) => {
-    if (window.confirm('Are you sure you want to delete this board?')) {
+    const board = boards.find(b => b.id === boardId)
+    if (window.confirm(`Are you sure you want to delete "${board?.name || 'this board'}"?`)) {
+      console.log('🗑️ Deleting board:', boardId)
       const result = await boardStore.deleteBoard(boardId)
       if (!result.success) {
         console.error('Failed to delete board:', result.error)
+        alert('Failed to delete board. Please try again.')
+      } else {
+        console.log('✅ Board deleted successfully')
       }
       // Boards will be reloaded via the change listener
     }

@@ -432,6 +432,15 @@ class BoardStore {
       // Clean up nodes data
       this.nodesData.delete(boardId);
       
+      // Clean up synthesis data
+      if (typeof synthesisStore !== 'undefined' && synthesisStore.clearSynthesis) {
+        try {
+          synthesisStore.clearSynthesis(boardId);
+        } catch (error) {
+          console.warn('Failed to clear synthesis:', error);
+        }
+      }
+      
       // If deleting active board, set first remaining board as active
       if (this.activeBoardId === boardId) {
         if (this.boards.length > 0) {
