@@ -20,12 +20,14 @@ import {
   AnalyzeNode, 
   CustomNode 
 } from './components/NodeTypes'
+import MultiOptionNode from './components/MultiOptionNode'
+import GeneratedNode from './components/GeneratedNode'
 import './styles/reactflow-overrides.css'
 import './styles/seednode.css'
 import './styles/popover.css'
 
 // Custom node types with props
-const createNodeTypes = (onPopoverOpen) => ({
+const createNodeTypes = (onPopoverOpen, onMultiOptionClick) => ({
   seed: (props) => <SeedNode {...props} onPopoverOpen={onPopoverOpen} />,
   question: (props) => <QuestionNode {...props} onPopoverOpen={onPopoverOpen} />,
   teach: (props) => <TeachNode {...props} onPopoverOpen={onPopoverOpen} />,
@@ -33,7 +35,9 @@ const createNodeTypes = (onPopoverOpen) => ({
   summarize: (props) => <SummarizeNode {...props} onPopoverOpen={onPopoverOpen} />,
   ideate: (props) => <IdeateNode {...props} onPopoverOpen={onPopoverOpen} />,
   analyze: (props) => <AnalyzeNode {...props} onPopoverOpen={onPopoverOpen} />,
-  custom: (props) => <CustomNode {...props} onPopoverOpen={onPopoverOpen} />
+  custom: (props) => <CustomNode {...props} onPopoverOpen={onPopoverOpen} />,
+  'multi-option': (props) => <MultiOptionNode {...props} data={{...props.data, onOptionClick: onMultiOptionClick}} />,
+  generated: (props) => <GeneratedNode {...props} onPopoverOpen={onPopoverOpen} />
 })
 
 // Initial nodes template
@@ -310,8 +314,8 @@ function AppContent() {
     }
   }, [setNodes, setEdges])
 
-  // Dynamic node types with popover handler
-  const nodeTypes = createNodeTypes(handlePopoverOpen)
+  // Dynamic node types with popover and multi-option handlers
+  const nodeTypes = createNodeTypes(handlePopoverOpen, handleMultiOptionClick)
 
   // Handle viewport changes to track zoom
   const handleViewportChange = useCallback((viewport) => {
@@ -344,6 +348,55 @@ function AppContent() {
     return refId
   }, [refIdCounter])
 
+  // Handle multi-option node button clicks
+  const handleMultiOptionClick = useCallback(async (option, index, parentNodeId) => {
+    const parentNode = nodes.find(n => n.id === parentNodeId)
+    if (!parentNode) return
+
+    const newNodeId = `generated-${Date.now()}-${index}`
+    const newRefId = generateRefId()
+    
+    // Position new node to the right of parent with vertical offset for multiple nodes
+    const verticalOffset = index * 80 // Spread nodes vertically
+    const newNode = {
+      id: newNodeId,
+      type: 'generated',
+      position: { 
+        x: parentNode.position.x + 300, 
+        y: parentNode.position.y + verticalOffset 
+      },
+      data: { 
+        heading: option,
+        label: option,
+        content: '', 
+        nodeType: 'generated',
+        refId: newRefId,
+        draggable: true,
+        placeholder: `Write about ${option.toLowerCase()}...`
+      }
+    }
+    
+    // Create edge connecting parent to new node
+    const newEdge = {
+      id: `edge-${parentNodeId}-${newNodeId}`,
+      source: parentNodeId,
+      target: newNodeId,
+      sourceHandle: null,
+      targetHandle: null
+    }
+    
+    const updatedNodes = [...nodes, newNode]
+    const updatedEdges = [...edges, newEdge]
+    
+    setNodes(updatedNodes)
+    setEdges(updatedEdges)
+    
+    // Auto-save immediately
+    if (activeBoard) {
+      await autoSaveNodes(updatedNodes, updatedEdges)
+    }
+  }, [nodes, edges, setNodes, setEdges, generateRefId, activeBoard, autoSaveNodes])
+
   // Handle node type selection with auto-save
   const handleNodeTypeSelect = useCallback(async (nodeType) => {
     const sourceNode = nodes.find(n => n.id === popover.sourceNodeId)
@@ -364,7 +417,7 @@ function AppContent() {
         label: nodeType.label, 
         icon: nodeType.icon,
         content: '', 
-        nodeType: nodeType.id,
+        nodeType: nodeType.multiType || nodeType.id, // Use multiType for multi-option nodes
         refId: newRefId, // Add unique reference ID
         draggable: true 
       }
