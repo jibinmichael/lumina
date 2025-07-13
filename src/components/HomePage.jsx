@@ -174,97 +174,74 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
           </Box>
         </Box>
 
-        {/* Starred Boards Section */}
-        <Box sx={{ mb: 6 }}>
-          <Typography
-            sx={{
-              fontSize: '14px',
-              fontWeight: 500,
-              color: '#6b7280',
-              mb: 1,
-            }}
-          >
-            Starred boards
-          </Typography>
-          
-          {starredBoards.length > 0 ? (
-            <Box sx={{ mb: 2 }}>
-              {starredBoards.map((board) => (
-                <Box
-                  key={board.id}
-                  onClick={() => handleBoardClick(board)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    py: 1.5,
-                    px: 0,
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.15s ease',
-                    '&:hover': {
-                      bgcolor: '#f9fafb',
-                    },
+        {/* Starred Boards (no heading, just show at top) */}
+        {starredBoards.length > 0 && (
+          <Box sx={{ mb: 6 }}>
+            {starredBoards.map((board) => (
+              <Box
+                key={board.id}
+                onClick={() => handleBoardClick(board)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  py: 1.5,
+                  px: 0,
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease',
+                  '&:hover': {
+                    bgcolor: '#f9fafb',
+                  },
+                }}
+              >
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleStarToggle(board.id)
+                  }}
+                  size="small"
+                  sx={{ 
+                    mr: 2, 
+                    color: '#fbbf24',
+                    '&:hover': { bgcolor: 'transparent' }
                   }}
                 >
+                  <Star sx={{ fontSize: 16 }} />
+                </IconButton>
+                
+                <Typography
+                  sx={{
+                    flex: 1,
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: '#333333',
+                  }}
+                >
+                  {board.name}
+                </Typography>
+                
+                <Tooltip title="Delete board" placement="top">
                   <IconButton
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleStarToggle(board.id)
+                      handleDeleteBoard(board.id)
                     }}
                     size="small"
                     sx={{ 
-                      mr: 2, 
-                      color: '#fbbf24',
-                      '&:hover': { bgcolor: 'transparent' }
+                      color: '#9ca3af',
+                      '&:hover': { 
+                        color: '#ef4444',
+                        bgcolor: 'transparent'
+                      }
                     }}
                   >
-                    <Star sx={{ fontSize: 16 }} />
+                    <Delete sx={{ fontSize: 16 }} />
                   </IconButton>
-                  
-                  <Typography
-                    sx={{
-                      flex: 1,
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: '#333333',
-                    }}
-                  >
-                    {board.name}
-                  </Typography>
-                  
-                  <Tooltip title="Delete board" placement="top">
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteBoard(board.id)
-                      }}
-                      size="small"
-                      sx={{ 
-                        color: '#9ca3af',
-                        '&:hover': { 
-                          color: '#ef4444',
-                          bgcolor: 'transparent'
-                        }
-                      }}
-                    >
-                      <Delete sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              ))}
-            </Box>
-          ) : (
-            <Typography
-              sx={{
-                fontSize: '12px',
-                color: '#9ca3af',
-                mb: 2,
-              }}
-            >
-              Your favorite boards will show up here
-            </Typography>
-          )}
-        </Box>
+                </Tooltip>
+              </Box>
+            ))}
+          </Box>
+        )}
 
         {/* Date-grouped Boards */}
         {groupedBoards.map((group) => (

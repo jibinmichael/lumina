@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { Box, Typography, Alert } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { ReactFlow, ReactFlowProvider, useNodesState, useEdgesState, useReactFlow } from '@xyflow/react'
@@ -18,7 +18,8 @@ import {
   SummarizeNode, 
   IdeateNode, 
   AnalyzeNode, 
-  CustomNode 
+  CustomNode,
+  DecisionNode 
 } from './components/NodeTypes'
 import MultiOptionNode from './components/MultiOptionNode'
 import GeneratedNode from './components/GeneratedNode'
@@ -36,6 +37,7 @@ const createNodeTypes = (onPopoverOpen, onMultiOptionClick) => ({
   ideate: (props) => <IdeateNode {...props} onPopoverOpen={onPopoverOpen} />,
   analyze: (props) => <AnalyzeNode {...props} onPopoverOpen={onPopoverOpen} />,
   custom: (props) => <CustomNode {...props} onPopoverOpen={onPopoverOpen} />,
+  decision: (props) => <DecisionNode {...props} onPopoverOpen={onPopoverOpen} />,
   'multi-option': (props) => <MultiOptionNode {...props} data={{...props.data, onOptionClick: onMultiOptionClick}} />,
   generated: (props) => <GeneratedNode {...props} onPopoverOpen={onPopoverOpen} />
 })
@@ -58,18 +60,48 @@ const createInitialNodes = (refIdCounter = 1) => [
 // Initial edges for testing
 const initialEdges = []
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('App Error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h4" color="error">Something went wrong!</Typography>
+          <Typography variant="body1">{this.state.error?.message}</Typography>
+          <pre>{this.state.error?.stack}</pre>
+        </Box>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
 // Main App Component with ReactFlow context
 function AppContent() {
   const theme = useTheme()
   const { fitView, setCenter } = useReactFlow()
   
   // State management
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState(createInitialNodes(1))
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [boards, setBoards] = useState([])
   const [activeBoard, setActiveBoard] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isInitializing, setIsInitializing] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(100)
   const [storageStatus, setStorageStatus] = useState({
@@ -94,11 +126,12 @@ function AppContent() {
   // Side panel state
   const [sidePanelOpen, setSidePanelOpen] = useState(false)
 
-  // Initialize storage systems
+
+
+  // Initialize storage systems silently in background
   const initializeStorageSystems = useCallback(async () => {
     try {
-      setIsInitializing(true)
-      console.log('🚀 Initializing Lumina Notes storage systems...')
+      console.log('🔧 Starting storage initialization...')
 
       // Initialize user identity
       if (!userIdentity.isInitialized) {
@@ -139,8 +172,6 @@ function AppContent() {
       console.error('Storage initialization failed:', error)
       setError(`Storage initialization failed: ${error.message}`)
       return false
-    } finally {
-      setIsInitializing(false)
     }
   }, [])
 
@@ -149,6 +180,7 @@ function AppContent() {
     if (!boardStore.isInitialized) return
 
     try {
+      console.log('📚 Loading board data...')
       const allBoards = boardStore.getBoards()
       const currentActiveBoard = boardStore.getActiveBoard()
       
@@ -191,65 +223,8 @@ function AppContent() {
     } catch (error) {
       console.error('Error loading board data:', error)
       setError(`Error loading boards: ${error.message}`)
-    } finally {
-      setIsLoading(false)
     }
   }, [setNodes, setEdges])
-
-  // Auto-save nodes when they change
-  const autoSaveNodes = useCallback(async (currentNodes, currentEdges, viewport = null) => {
-    if (!activeBoard || !boardStore.isInitialized) return
-
-    try {
-      await boardStore.saveNodesForBoard(
-        activeBoard.id,
-        currentNodes,
-        currentEdges,
-        viewport
-      )
-    } catch (error) {
-      console.error('Auto-save failed:', error)
-    }
-  }, [activeBoard])
-
-  // Enhanced nodes change handler with auto-save
-  const handleNodesChange = useCallback((changes) => {
-    onNodesChange(changes)
-    
-    // Auto-save after a short delay
-    setTimeout(() => {
-      autoSaveNodes(nodes, edges)
-    }, 500)
-  }, [onNodesChange, autoSaveNodes, nodes, edges])
-
-  // Enhanced edges change handler with auto-save
-  const handleEdgesChange = useCallback((changes) => {
-    onEdgesChange(changes)
-    
-    // Auto-save after a short delay
-    setTimeout(() => {
-      autoSaveNodes(nodes, edges)
-    }, 500)
-  }, [onEdgesChange, autoSaveNodes, nodes, edges])
-
-  // Jump to node by reference ID
-  const jumpToNode = useCallback((refId) => {
-    const targetNode = nodes.find(node => node.data.refId === refId)
-    if (targetNode) {
-      setCenter(targetNode.position.x, targetNode.position.y, { zoom: 1.2, duration: 800 })
-    } else {
-      console.log(`Node with reference ID "${refId}" not found`)
-      console.log('Available reference IDs:', nodes.map(n => n.data.refId).filter(Boolean))
-    }
-  }, [nodes, setCenter])
-
-  // Make jumpToNode available globally for easy access
-  useEffect(() => {
-    window.jumpToNode = jumpToNode
-    console.log('🔍 Citation Helper: Reference IDs are hidden from UI but accessible via backend')
-    console.log('📍 Use jumpToNode("N001") to jump to any node by reference ID')
-    console.log('🔢 Available reference IDs:', nodes.map(n => n.data.refId).filter(Boolean))
-  }, [jumpToNode, nodes])
 
   // Handle popover open
   const handlePopoverOpen = useCallback((position, sourceNodeId) => {
@@ -278,44 +253,43 @@ function AppContent() {
     setShowHomePage(false)
   }, [])
 
-  const handleSelectBoard = useCallback(async (board) => {
-    try {
-      // Switch to the selected board
-      const result = boardStore.switchBoard(board.id)
-      if (result.success) {
-        setActiveBoard(board)
-        
-        // Load nodes for the new board
-        const boardNodes = boardStore.getNodesForBoard(board.id)
-        
-        if (boardNodes.nodes && boardNodes.nodes.length > 0) {
-          setNodes(boardNodes.nodes)
-          setEdges(boardNodes.edges || [])
-        } else {
-          // Create initial nodes for empty board
-          const initialNodes = createInitialNodes(1)
-          setNodes(initialNodes)
-          setEdges(initialEdges)
-          
-          // Save initial nodes
-          await boardStore.saveNodesForBoard(
-            board.id, 
-            initialNodes, 
-            initialEdges, 
-            { x: 0, y: 0, zoom: 1 }
-          )
-        }
-        
-        setShowHomePage(false)
-      }
-    } catch (error) {
-      console.error('Error switching board:', error)
-      setError(`Error switching board: ${error.message}`)
-    }
-  }, [setNodes, setEdges])
+  // Auto-save nodes when they change
+  const autoSaveNodes = useCallback(async (currentNodes, currentEdges, viewport = null) => {
+    if (!activeBoard) return
 
-  // Dynamic node types with popover and multi-option handlers
-  const nodeTypes = createNodeTypes(handlePopoverOpen, handleMultiOptionClick)
+    try {
+      // Save to board store
+      await boardStore.saveNodesForBoard(
+        activeBoard.id,
+        currentNodes,
+        currentEdges,
+        viewport
+      )
+      console.log('💾 Auto-saved nodes and edges')
+    } catch (error) {
+      console.error('Auto-save failed:', error)
+    }
+  }, [activeBoard])
+
+  // Enhanced nodes change handler with auto-save
+  const handleNodesChange = useCallback((changes) => {
+    onNodesChange(changes)
+    
+    // Auto-save after a short delay
+    setTimeout(() => {
+      autoSaveNodes(nodes, edges)
+    }, 500)
+  }, [onNodesChange, autoSaveNodes, nodes, edges])
+
+  // Enhanced edges change handler with auto-save  
+  const handleEdgesChange = useCallback((changes) => {
+    onEdgesChange(changes)
+    
+    // Auto-save after a short delay
+    setTimeout(() => {
+      autoSaveNodes(nodes, edges)
+    }, 500)
+  }, [onEdgesChange, autoSaveNodes, nodes, edges])
 
   // Handle viewport changes to track zoom
   const handleViewportChange = useCallback((viewport) => {
@@ -372,7 +346,7 @@ function AppContent() {
         nodeType: 'generated',
         refId: newRefId,
         draggable: true,
-        placeholder: `Write about ${option.toLowerCase()}...`
+        placeholder: 'Write your thought or insight here...'
       }
     }
     
@@ -391,11 +365,11 @@ function AppContent() {
     setNodes(updatedNodes)
     setEdges(updatedEdges)
     
-    // Auto-save immediately
-    if (activeBoard) {
-      await autoSaveNodes(updatedNodes, updatedEdges)
-    }
-  }, [nodes, edges, setNodes, setEdges, generateRefId, activeBoard, autoSaveNodes])
+    // Auto-save immediately for new nodes
+    await autoSaveNodes(updatedNodes, updatedEdges)
+    
+    console.log('🆕 Created generated node:', newNode)
+  }, [nodes, edges, setNodes, setEdges, generateRefId, autoSaveNodes])
 
   // Handle node type selection with auto-save
   const handleNodeTypeSelect = useCallback(async (nodeType) => {
@@ -440,13 +414,20 @@ function AppContent() {
     handlePopoverClose()
     
     // Auto-save immediately for new nodes
-    if (activeBoard) {
-      await autoSaveNodes(updatedNodes, updatedEdges)
-    }
-  }, [nodes, edges, popover.sourceNodeId, setNodes, setEdges, handlePopoverClose, generateRefId, activeBoard, autoSaveNodes])
+    await autoSaveNodes(updatedNodes, updatedEdges)
+    
+    console.log('🆕 Created new node:', newNode)
+  }, [nodes, edges, popover.sourceNodeId, setNodes, setEdges, handlePopoverClose, generateRefId, autoSaveNodes])
+
+  // Dynamic node types with popover and multi-option handlers (memoized)
+  const nodeTypes = useMemo(
+    () => createNodeTypes(handlePopoverOpen, handleMultiOptionClick),
+    [handlePopoverOpen, handleMultiOptionClick]
+  )
 
   // Initialize on mount
   useEffect(() => {
+    console.log('🔄 App initialization starting...')
     const initialize = async () => {
       const success = await initializeStorageSystems()
       if (success) {
@@ -457,69 +438,9 @@ function AppContent() {
     initialize()
   }, [initializeStorageSystems, loadBoardData])
 
-  // Set up board store change listener
-  useEffect(() => {
-    if (!boardStore.isInitialized) return
-
-    const removeListener = boardStore.addChangeListener((event, data) => {
-      console.log('📡 Board store event:', event, data)
-      
-      switch (event) {
-        case 'board_created':
-        case 'board_deleted':
-        case 'board_renamed':
-          loadBoardData()
-          break
-        case 'active_board_changed':
-          setActiveBoard(data.board)
-          break
-        default:
-          break
-      }
-    })
-
-    return removeListener
-  }, [loadBoardData])
-
-  // Show loading screen during initialization
-  if (isInitializing) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Typography variant="h2" sx={{ mb: 2, color: 'text.primary' }}>
-          🔐 Initializing Lumina Notes
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-          Setting up your secure thinking space...
-        </Typography>
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="caption" sx={{ color: storageStatus.userIdentity ? 'success.main' : 'text.secondary' }}>
-            {storageStatus.userIdentity ? '✅' : '⏳'} User Identity
-          </Typography>
-          <br />
-          <Typography variant="caption" sx={{ color: storageStatus.boardStore ? 'success.main' : 'text.secondary' }}>
-            {storageStatus.boardStore ? '✅' : '⏳'} Board Storage
-          </Typography>
-          <br />
-          <Typography variant="caption" sx={{ color: storageStatus.autoSave ? 'success.main' : 'text.secondary' }}>
-            {storageStatus.autoSave ? '✅' : '⏳'} Auto-Save System
-          </Typography>
-        </Box>
-      </Box>
-    )
-  }
-
   // Show homepage if requested
   if (showHomePage) {
-    return <HomePage onStartThinking={handleStartThinking} onSelectBoard={handleSelectBoard} />
+    return <HomePage onStartThinking={handleStartThinking} onSelectBoard={() => {}} />
   }
 
   if (error) {
@@ -562,28 +483,6 @@ function AppContent() {
           <Typography variant="h6">Error</Typography>
           <Typography variant="body2">{error}</Typography>
         </Alert>
-      </Box>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Typography variant="h2" sx={{ mb: 1, color: 'text.primary' }}>
-          Loading your canvas...
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {activeBoard ? `Opening "${activeBoard.name}"` : 'Preparing your thinking space'}
-        </Typography>
       </Box>
     )
   }
@@ -645,9 +544,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ReactFlowProvider>
-      <AppContent />
-    </ReactFlowProvider>
+    <ErrorBoundary>
+      <ReactFlowProvider>
+        <AppContent />
+      </ReactFlowProvider>
+    </ErrorBoundary>
   )
 }
 

@@ -90,12 +90,12 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
 
   // Custom handle style
   const handleStyle = {
-    width: '16px',
-    height: '16px',
+    width: '12px',
+    height: '12px',
     background: '#d1d5db',
     border: '2px solid #fff',
     borderRadius: '50%',
-    right: '-20px',
+    right: '-18px',
     top: '50%',
     transform: 'translateY(-50%)',
     zIndex: 10,
@@ -105,7 +105,7 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
   return (
     <div className="seed-node">
       <div className="node-header">
-        <h3>What's on your mind?</h3>
+        <h3>Start Here</h3>
         {/* Hide reference ID from display but keep in data for backend access */}
         {/* {data.refId && (
           <span className="node-ref-id">{data.refId}</span>
@@ -114,7 +114,7 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
       <div className="node-input" onClick={(e) => e.stopPropagation()}>
         <textarea 
           ref={textareaRef}
-          placeholder="Type your thoughts here..."
+          placeholder="Capture a single thought, idea, or question..."
           value={content}
           onChange={handleTextChange}
           onBlur={handleBlur}

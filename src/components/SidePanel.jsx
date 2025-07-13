@@ -94,8 +94,6 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
     }
   }
 
-  if (!isOpen) return null
-
   return (
     <Box
       sx={{
@@ -105,12 +103,13 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
         width: 450,
         height: '100vh',
         bgcolor: 'white',
-        boxShadow: '-2px 0 20px rgba(0, 0, 0, 0.1)',
+        boxShadow: isOpen ? '-2px 0 20px rgba(0, 0, 0, 0.1)' : 'none',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 1001,
         transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        transition: 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease',
+        pointerEvents: isOpen ? 'auto' : 'none',
       }}
     >
       {/* Header */}

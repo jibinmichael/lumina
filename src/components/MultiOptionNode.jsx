@@ -16,74 +16,89 @@ const MultiOptionNode = ({ data, id }) => {
     }
   }
 
-  // Get options based on node type
-  const getOptionsForType = () => {
+  // Get options and emoji based on node type
+  const getNodeConfig = () => {
     switch (data.nodeType) {
       case 'see-different-angles':
-        return [
-          'User perspective',
-          'Competitor perspective', 
-          'Ethical perspective',
-          'Technical perspective',
-          'Business perspective'
-        ]
+        return {
+          emoji: '👁️',
+          options: [
+            'User Perspective',
+            'Competitor View',
+            'Ethical Lens',
+            'Technical Constraint',
+            'Opposite Assumption'
+          ]
+        }
       case 'similar-stuff':
-        return [
-          'Related concepts',
-          'Similar examples',
-          'Analogous ideas',
-          'Parallel patterns',
-          'Connected themes'
-        ]
+        return {
+          emoji: '🔗',
+          options: [
+            'Related Theme',
+            'Analogous Situation',
+            'Parallel Case',
+            'Adjacent Idea',
+            'Shared Pattern'
+          ]
+        }
       case 'rabbit-hole':
-        return [
-          'What if we...',
-          'Why does this...',
-          'How might this...',
-          'What happens when...',
-          'Could this lead to...'
-        ]
+        return {
+          emoji: '🕳️',
+          options: [
+            'What if…',
+            'Why might…',
+            'How else…',
+            'What happens when…',
+            'Could it also…'
+          ]
+        }
       case 'ideate':
-        return [
-          'Creative variation',
-          'Bold experiment',
-          'Simple solution',
-          'Future possibility',
-          'Unexpected angle'
-        ]
-      case 'give-me':
-        return [
-          'Benefits',
-          'Features', 
-          'Variations',
-          'Examples',
-          'Applications'
-        ]
+        return {
+          emoji: '🚀',
+          options: [
+            'Wild Take',
+            'Simple Fix',
+            'Bold Experiment',
+            'Long-Term Vision',
+            'Underdog Strategy'
+          ]
+        }
+
       case 'key-insights':
-        return [
-          'Core insight',
-          'Hidden pattern',
-          'Key challenge'
-        ]
+        return {
+          emoji: '🔑',
+          options: [
+            'Core Theme',
+            'Underlying Pattern',
+            'Root Challenge'
+          ]
+        }
       case 'pros-cons':
-        return [
-          'Pros',
-          'Cons'
-        ]
+        return {
+          emoji: '⚖️',
+          options: [
+            'Possible Upside',
+            'Possible Risk'
+          ]
+        }
       default:
-        return ['Option 1', 'Option 2', 'Option 3']
+        return {
+          emoji: '📝',
+          options: ['Option 1', 'Option 2', 'Option 3']
+        }
     }
   }
 
-  const options = getOptionsForType()
+  const nodeConfig = getNodeConfig()
+  const { emoji, options } = nodeConfig
 
   const handleStyle = {
-    width: '16px',
-    height: '16px',
+    width: '12px',
+    height: '12px',
     background: '#d1d5db',
     border: '2px solid #fff',
     borderRadius: '50%',
-    right: '-20px',
+    right: '-18px',
     top: '50%',
     transform: 'translateY(-50%)',
     zIndex: 10,
@@ -102,26 +117,31 @@ const MultiOptionNode = ({ data, id }) => {
     }}>
       {/* Title */}
       <div style={{
-        marginBottom: '12px',
-        paddingBottom: '8px',
-        borderBottom: '1px solid #f3f4f6'
+        marginBottom: '16px'
       }}>
         <h3 style={{
           margin: 0,
           fontSize: '14px',
-          fontWeight: 600,
+          fontWeight: 500,
           color: '#374151',
-          lineHeight: 1.3
+          lineHeight: 1.3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
         }}>
+          <span style={{ fontSize: '16px' }}>{emoji}</span>
           {data.label || 'Choose an option...'}
         </h3>
       </div>
 
       {/* Option Buttons */}
       <div style={{
+        background: '#f8f9fa',
+        borderRadius: '8px',
+        padding: '16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px'
+        gap: '10px'
       }}>
         {options.map((option, index) => (
           <button
@@ -129,28 +149,33 @@ const MultiOptionNode = ({ data, id }) => {
             onClick={() => handleButtonClick(option, index)}
             style={{
               width: '100%',
-              padding: '10px 12px',
+              padding: '8px 12px',
               border: selectedButtons.has(index) ? '2px solid #ec4899' : '1px solid #e5e7eb',
               borderRadius: '8px',
               background: selectedButtons.has(index) ? '#fdf2f8' : '#ffffff',
               color: '#374151',
               fontSize: '13px',
-              fontWeight: 500,
+              fontWeight: 400,
               cursor: 'pointer',
               textAlign: 'left',
               transition: 'all 0.15s ease',
-              outline: 'none'
+              outline: 'none',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
             onMouseEnter={(e) => {
               if (!selectedButtons.has(index)) {
-                e.target.style.background = '#f9fafb'
-                e.target.style.borderColor = '#d1d5db'
+                e.target.style.background = '#f1f5f9'
+                e.target.style.borderColor = '#cbd5e1'
+                e.target.style.transform = 'translateY(-1px)'
+                e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
               }
             }}
             onMouseLeave={(e) => {
               if (!selectedButtons.has(index)) {
                 e.target.style.background = '#ffffff'
                 e.target.style.borderColor = '#e5e7eb'
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
               }
             }}
           >
@@ -173,12 +198,12 @@ const MultiOptionNode = ({ data, id }) => {
         type="target" 
         position={Position.Left} 
         style={{
-          width: '16px',
-          height: '16px',
+          width: '12px',
+          height: '12px',
           background: '#d1d5db',
           border: '2px solid #fff',
           borderRadius: '50%',
-          left: '-20px',
+          left: '-18px',
           top: '50%',
           transform: 'translateY(-50%)',
           zIndex: 10

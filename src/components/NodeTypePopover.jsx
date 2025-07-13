@@ -11,7 +11,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       icon: '🔍',
       title: 'Explore the Idea',
       items: [
-        { id: 'quick-question', label: 'Quick Question', nodeType: 'question', behaviorType: '1-to-1' },
+        { id: 'quick-question', label: 'Question to Consider', nodeType: 'question', behaviorType: '1-to-1' },
         { id: 'different-angles', label: 'See Different Angles', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'see-different-angles' },
         { id: 'perspective-shift', label: 'Perspective Shift', nodeType: 'custom', behaviorType: '1-to-1' },
         { id: 'similar-stuff', label: 'Find Similar Ideas', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'similar-stuff' }
@@ -24,8 +24,8 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       items: [
         { id: 'fresh-ideas', label: 'Find Fresh Ideas', nodeType: 'ideate', behaviorType: '1-to-1' },
         { id: 'do-opposite', label: 'Do the Opposite', nodeType: 'custom', behaviorType: '1-to-1' },
-        { id: 'brainstorm', label: 'Brainstorm More', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'ideate' },
-        { id: 'explore-deeper', label: 'Explore Deeper', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'rabbit-hole' }
+        { id: 'brainstorm', label: 'Generate Variations', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'ideate' },
+        { id: 'explore-deeper', label: 'Explore Further', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'rabbit-hole' }
       ]
     },
     {
@@ -35,8 +35,8 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       items: [
         { id: 'what-problem', label: 'What Problem Does This Solve?', nodeType: 'question', behaviorType: '1-to-1' },
         { id: 'define-problem', label: 'Define the Problem', nodeType: 'analyze', behaviorType: '1-to-1' },
-        { id: 'key-insights', label: 'Find Key Insights', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'key-insights' },
-        { id: 'summarize', label: 'Summarize This', nodeType: 'summarize', behaviorType: '1-to-1' }
+        { id: 'key-insights', label: 'Extract Key Insights', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'key-insights' },
+        { id: 'summarize', label: 'Key Takeaway', nodeType: 'summarize', behaviorType: '1-to-1' }
       ]
     },
     {
@@ -57,6 +57,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       items: [
         { id: 'draft-solution', label: 'Draft a Solution', nodeType: 'custom', behaviorType: '1-to-1' },
         { id: 'action-steps', label: 'Create Action Steps', nodeType: 'analyze', behaviorType: '1-to-1' },
+        { id: 'decision-made', label: 'Decision Made', nodeType: 'decision', behaviorType: '1-to-1' },
         { id: 'my-idea', label: 'Add My Own Idea', nodeType: 'ideate', behaviorType: '1-to-1' }
       ]
     }
@@ -64,13 +65,14 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
 
   // Standard node type definitions with consistent emojis
   const nodeTypeDefinitions = {
-    question: { id: 'question', label: 'Quick Question', icon: '❓', color: '#84cc16' },
-    teach: { id: 'teach', label: 'Learn About', icon: '📚', color: '#3b82f6' },
-    rabbithole: { id: 'rabbithole', label: 'Explore Deeper', icon: '🌀', color: '#6366f1' },
-    summarize: { id: 'summarize', label: 'Summarize', icon: '📋', color: '#8b5cf6' },
-    ideate: { id: 'ideate', label: 'Brainstorm', icon: '💡', color: '#eab308' },
-    analyze: { id: 'analyze', label: 'Analyze', icon: '🔍', color: '#06b6d4' },
-    custom: { id: 'custom', label: 'Custom', icon: '⚙️', color: '#6b7280' },
+    question: { id: 'question', label: 'Question to Consider', icon: '❓', color: '#84cc16' },
+    teach: { id: 'teach', label: 'Background Context', icon: '📚', color: '#3b82f6' },
+    rabbithole: { id: 'rabbithole', label: 'Expand This Topic', icon: '🌀', color: '#6366f1' },
+    summarize: { id: 'summarize', label: 'Key Takeaway', icon: '📋', color: '#8b5cf6' },
+    ideate: { id: 'ideate', label: 'New Idea', icon: '💡', color: '#eab308' },
+    analyze: { id: 'analyze', label: 'Insight or Tension', icon: '🔍', color: '#06b6d4' },
+    custom: { id: 'custom', label: 'Open Prompt', icon: '⚙️', color: '#6b7280' },
+    decision: { id: 'decision', label: 'Decision Made', icon: '✅', color: '#10b981' },
     'multi-option': { id: 'multi-option', label: 'Multi Option', icon: '🎯', color: '#8b5cf6' }
   }
 
@@ -196,17 +198,6 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
                 <span style={{ flex: 1, color: '#374151' }}>
                   {item.label}
                 </span>
-                {/* Show indicator for multi-option nodes */}
-                {isMultiOption && (
-                  <span style={{ 
-                    fontSize: '10px', 
-                    color: '#8b5cf6', 
-                    marginLeft: '4px',
-                    fontWeight: 600
-                  }}>
-                    ●●●
-                  </span>
-                )}
               </div>
             )
           })}
@@ -233,8 +224,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
             transition: 'background-color 0.1s ease',
             color: '#6b7280',
             userSelect: 'none',
-            marginTop: '6px',
-            borderTop: '1px solid #f3f4f6'
+            marginTop: '6px'
           }}
         >
           Load more options...

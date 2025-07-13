@@ -90,12 +90,12 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
   }
 
   const handleStyle = {
-    width: '16px',
-    height: '16px',
+    width: '12px',
+    height: '12px',
     background: '#d1d5db',
     border: '2px solid #fff',
     borderRadius: '50%',
-    right: '-20px',
+    right: '-18px',
     top: '50%',
     transform: 'translateY(-50%)',
     zIndex: 10,
@@ -133,12 +133,12 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
         type="target" 
         position={Position.Left} 
         style={{
-          width: '16px',
-          height: '16px',
+          width: '12px',
+          height: '12px',
           background: '#d1d5db',
           border: '2px solid #fff',
           borderRadius: '50%',
-          left: '-20px',
+          left: '-18px',
           top: '50%',
           transform: 'translateY(-50%)',
           zIndex: 10
@@ -155,8 +155,8 @@ export const QuestionNode = (props) => (
     {...props}
     className="question-node"
     icon="❓"
-    title="Quick Question"
-    placeholder="What would you like to know?"
+    title="Question to Consider"
+    placeholder="Ask a clarifying or thought-provoking question..."
     color="#84cc16"
   />
 )
@@ -167,8 +167,8 @@ export const TeachNode = (props) => (
     {...props}
     className="teach-node"
     icon="📚"
-    title="Learn About"
-    placeholder="What should I learn about?"
+    title="Background Context"
+    placeholder="Note what you'd want to understand better..."
     color="#3b82f6"
   />
 )
@@ -179,8 +179,8 @@ export const RabbitholeNode = (props) => (
     {...props}
     className="rabbithole-node"
     icon="🌀"
-    title="Explore Deeper"
-    placeholder="Let's explore this deeper..."
+    title="Expand This Topic"
+    placeholder="Explore new angles, sub-questions, or adjacent thoughts..."
     color="#6366f1"
   />
 )
@@ -191,8 +191,8 @@ export const SummarizeNode = (props) => (
     {...props}
     className="summarize-node"
     icon="📋"
-    title="Summarize"
-    placeholder="What should I summarize?"
+    title="Key Takeaway"
+    placeholder="What's the essence of this idea in your words?"
     color="#8b5cf6"
   />
 )
@@ -203,8 +203,8 @@ export const IdeateNode = (props) => (
     {...props}
     className="ideate-node"
     icon="💡"
-    title="Brainstorm"
-    placeholder="Let's brainstorm ideas..."
+    title="New Idea"
+    placeholder="Add an original idea, variation, or bold take..."
     color="#eab308"
   />
 )
@@ -215,8 +215,8 @@ export const AnalyzeNode = (props) => (
     {...props}
     className="analyze-node"
     icon="🔍"
-    title="Analyze"
-    placeholder="What should I analyze?"
+    title="Insight or Tension"
+    placeholder="What stands out, confuses you, or creates friction here?"
     color="#06b6d4"
   />
 )
@@ -227,8 +227,20 @@ export const CustomNode = (props) => (
     {...props}
     className="custom-node"
     icon="⚙️"
-    title="Custom"
-    placeholder="Describe your custom thinking..."
+    title="Open Prompt"
+    placeholder="Frame your own challenge, thought, or pattern..."
     color="#6b7280"
+  />
+)
+
+// Decision Node - for capturing decisions
+export const DecisionNode = (props) => (
+  <BaseNode 
+    {...props}
+    className="decision-node"
+    icon="✅"
+    title="Decision Made"
+    placeholder="State your decision and the reasoning behind it..."
+    color="#10b981"
   />
 ) 

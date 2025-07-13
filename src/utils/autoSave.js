@@ -404,7 +404,7 @@ class AutoSaveManager {
       userIdentity.updateLastActivity();
       
       // Auto-save app state periodically
-      this.scheduleAutoSave(DATA_TYPES.APP_STATE.key, {
+      this.scheduleAutoSave('APP_STATE', {
         lastHeartbeat: Date.now(),
         sessionId: userIdentity.getCurrentUser()?.sessionId
       }, {

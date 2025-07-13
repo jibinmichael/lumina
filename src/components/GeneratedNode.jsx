@@ -84,12 +84,12 @@ const GeneratedNode = ({ data, onPopoverOpen, id }) => {
   }
 
   const handleStyle = {
-    width: '16px',
-    height: '16px',
+    width: '12px',
+    height: '12px',
     background: '#d1d5db',
     border: '2px solid #fff',
     borderRadius: '50%',
-    right: '-20px',
+    right: '-18px',
     top: '50%',
     transform: 'translateY(-50%)',
     zIndex: 10,
@@ -108,14 +108,12 @@ const GeneratedNode = ({ data, onPopoverOpen, id }) => {
     }}>
       {/* Heading */}
       <div style={{
-        marginBottom: '12px',
-        paddingBottom: '8px',
-        borderBottom: '1px solid #f3f4f6'
+        marginBottom: '12px'
       }}>
         <h3 style={{
           margin: 0,
           fontSize: '14px',
-          fontWeight: 600,
+          fontWeight: 500,
           color: '#374151',
           lineHeight: 1.3
         }}>
@@ -127,7 +125,7 @@ const GeneratedNode = ({ data, onPopoverOpen, id }) => {
       <div className="node-input" onClick={(e) => e.stopPropagation()}>
         <textarea 
           ref={textareaRef}
-          placeholder={data.placeholder || "Add your thoughts here..."}
+          placeholder={data.placeholder || "Write your thought or insight here..."}
           value={content}
           onChange={handleTextChange}
           onBlur={handleBlur}
@@ -164,12 +162,12 @@ const GeneratedNode = ({ data, onPopoverOpen, id }) => {
         type="target" 
         position={Position.Left} 
         style={{
-          width: '16px',
-          height: '16px',
+          width: '12px',
+          height: '12px',
           background: '#d1d5db',
           border: '2px solid #fff',
           borderRadius: '50%',
-          left: '-20px',
+          left: '-18px',
           top: '50%',
           transform: 'translateY(-50%)',
           zIndex: 10
