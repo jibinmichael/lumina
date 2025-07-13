@@ -31,7 +31,7 @@ import {
   CheckCircle,
   AutorenewIcon
 } from '@mui/icons-material'
-import synthesisStore from '../stores/synthesisStore'
+// import synthesisStore from '../stores/synthesisStore'
 
 const SidePanel = ({ isOpen, onClose, activeBoard }) => {
   const [timeAgo, setTimeAgo] = useState('')
@@ -113,16 +113,16 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
       }
     }
 
-    synthesisStore.addChangeListener(handleSynthesisChange)
+    // synthesisStore.addChangeListener(handleSynthesisChange)
     
     // Initialize state from store
-    setSynthesis(synthesisStore.getCurrentSynthesis())
-    setSynthesisStatus(synthesisStore.getStatus())
-    setSynthesisError(synthesisStore.getLastError())
-    setAiEnabled(synthesisStore.isSynthesisEnabled())
+    // setSynthesis(synthesisStore.getCurrentSynthesis())
+    // setSynthesisStatus(synthesisStore.getStatus())
+    // setSynthesisError(synthesisStore.getLastError())
+    // setAiEnabled(synthesisStore.isSynthesisEnabled())
 
     return () => {
-      synthesisStore.removeChangeListener(handleSynthesisChange)
+      // synthesisStore.removeChangeListener(handleSynthesisChange)
     }
   }, [])
 
@@ -151,15 +151,15 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
       localStorage.setItem('lumina_openai_key', key)
       
       // Initialize synthesis store
-      const success = await synthesisStore.initialize(key)
+      // const success = await synthesisStore.initialize(key)
       
-      if (success) {
+      // if (success) {
         setShowSettings(false)
         setApiKey(key)
         console.log('AI Synthesis Engine initialized successfully')
-      } else {
-        setSynthesisError('Failed to initialize AI service. Please check your API key.')
-      }
+      // } else {
+      //   setSynthesisError('Failed to initialize AI service. Please check your API key.')
+      // }
     } catch (error) {
       setSynthesisError(`Setup failed: ${error.message}`)
     } finally {
@@ -169,17 +169,17 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
 
   // Handle manual synthesis trigger
   const handleRefreshSynthesis = () => {
-    synthesisStore.triggerSynthesis()
+    // synthesisStore.triggerSynthesis()
   }
 
   // Handle clear synthesis
   const handleClearSynthesis = () => {
-    synthesisStore.clearSynthesis()
+    // synthesisStore.clearSynthesis()
   }
 
   // Handle AI toggle
   const handleAiToggle = (enabled) => {
-    synthesisStore.setEnabled(enabled)
+    // synthesisStore.setEnabled(enabled)
   }
 
   // Handle content change (for manual editing)
