@@ -107,10 +107,7 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
       <div className="node-header">
         <span className="node-icon">{data.icon || icon}</span>
         <h3>{data.label || title}</h3>
-        {/* Hide reference ID from display but keep in data for backend access */}
-        {/* {data.refId && (
-          <span className="node-ref-id">{data.refId}</span>
-        )} */}
+        {/* Reference ID hidden from UI but available for backend access */}
       </div>
       <div className="node-input" onClick={(e) => e.stopPropagation()}>
         <textarea 
@@ -152,67 +149,67 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
   )
 }
 
-// Question Node
+// Question Node - standardized emoji
 export const QuestionNode = (props) => (
   <BaseNode 
     {...props}
     className="question-node"
-    icon="💭"
-    title="Quick question"
+    icon="❓"
+    title="Quick Question"
     placeholder="What would you like to know?"
     color="#84cc16"
   />
 )
 
-// Teach Node
+// Teach Node - standardized emoji
 export const TeachNode = (props) => (
   <BaseNode 
     {...props}
     className="teach-node"
     icon="📚"
-    title="Teach me"
+    title="Learn About"
     placeholder="What should I learn about?"
     color="#3b82f6"
   />
 )
 
-// Rabbit Hole Node
+// Rabbit Hole Node - standardized emoji
 export const RabbitholeNode = (props) => (
   <BaseNode 
     {...props}
     className="rabbithole-node"
     icon="🌀"
-    title="Rabbit hole"
+    title="Explore Deeper"
     placeholder="Let's explore this deeper..."
     color="#6366f1"
   />
 )
 
-// Summarize Node
+// Summarize Node - standardized emoji
 export const SummarizeNode = (props) => (
   <BaseNode 
     {...props}
     className="summarize-node"
-    icon="✨"
+    icon="📋"
     title="Summarize"
     placeholder="What should I summarize?"
     color="#8b5cf6"
   />
 )
 
-// Ideate Node
+// Ideate Node - standardized emoji
 export const IdeateNode = (props) => (
   <BaseNode 
     {...props}
     className="ideate-node"
     icon="💡"
-    title="Ideate!"
+    title="Brainstorm"
     placeholder="Let's brainstorm ideas..."
     color="#eab308"
   />
 )
 
-// Analyze Node
+// Analyze Node - standardized emoji
 export const AnalyzeNode = (props) => (
   <BaseNode 
     {...props}
@@ -224,7 +221,7 @@ export const AnalyzeNode = (props) => (
   />
 )
 
-// Custom Node
+// Custom Node - standardized emoji
 export const CustomNode = (props) => (
   <BaseNode 
     {...props}
