@@ -182,7 +182,7 @@ class EncryptionManager {
 
   // Fallback key generation for environments without Web Crypto
   generateFallbackKey(keyMaterial) {
-    const hash = this.simpleHash(new TextEncoder().encode(keyMaterial));
+    let hash = this.simpleHash(new TextEncoder().encode(keyMaterial));
     const key = new Uint8Array(32); // 256 bits
     
     let seed = hash;
