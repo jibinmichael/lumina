@@ -26,7 +26,7 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
         // Calculate the new height based on content
         const scrollHeight = textarea.scrollHeight
         const minHeight = 24 // Minimum height
-        const maxHeight = 400 // Maximum height before showing scroll
+        const maxHeight = 600 // Maximum height before showing scroll - increased from 400
         
         // Set the height to fit content, within min/max bounds
         const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
@@ -243,12 +243,15 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
             resize: 'none',
             fontFamily: 'inherit',
             fontSize: '13px',
-            lineHeight: '1.4',
+            lineHeight: '1.5', // Changed from 1.4 to give more space between lines
             color: '#374151',
             minHeight: '24px',
+            maxHeight: '600px', // Added explicit maxHeight to match autoResize
             overflowY: 'hidden',
             background: 'transparent',
-            padding: '4px 0'
+            padding: '4px 0',
+            whiteSpace: 'pre-wrap', // Added to ensure proper text wrapping
+            wordBreak: 'break-word' // Added to handle long words properly
           }}
         />
       </div>

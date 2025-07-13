@@ -4,21 +4,19 @@ import {
   Typography, 
   IconButton, 
   Tooltip, 
-  TextField, 
-  TextareaAutosize, 
+  TextField,
   Button
 } from '@mui/material'
 import { 
-  MenuOpen, 
-  Settings
+  MenuOpen
 } from '@mui/icons-material'
+import { boardStore } from '../stores/boardStore'
 
-const SidePanel = ({ isOpen, onClose, activeBoard }) => {
+const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate }) => {
   const [timeAgo, setTimeAgo] = useState('')
   const [lastModified, setLastModified] = useState(new Date())
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editableTitle, setEditableTitle] = useState('')
-  const [notes, setNotes] = useState('')
 
   // Capitalize first letter function
   const capitalizeFirstLetter = (str) => {
@@ -28,67 +26,69 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
 
   // Update editable title when activeBoard changes
   useEffect(() => {
-    const boardTitle = activeBoard?.name || 'Untitled Canvas'
-    const capitalized = capitalizeFirstLetter(boardTitle)
-    setEditableTitle(capitalized)
-    
-    // Load notes from localStorage
-    if (activeBoard?.id) {
-      const savedNotes = localStorage.getItem(`board_notes_${activeBoard.id}`)
-      setNotes(savedNotes || '')
-    }
+    const boardTitle = activeBoard?.name || 'Untitled'
+    setEditableTitle(boardTitle)
   }, [activeBoard])
 
   // Update time ago
   useEffect(() => {
     const updateTimeAgo = () => {
-      const now = new Date()
-      const modified = new Date(lastModified)
-      const seconds = Math.floor((now - modified) / 1000)
-      
-      if (seconds < 60) return 'Just now'
-      if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`
-      if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
-      return `${Math.floor(seconds / 86400)} days ago`
+      if (activeBoard?.lastModified) {
+        const now = new Date()
+        const lastModified = new Date(activeBoard.lastModified)
+        const diffInSeconds = Math.floor((now - lastModified) / 1000)
+        
+        if (diffInSeconds < 60) {
+          setTimeAgo(`updated ${diffInSeconds} seconds ago`)
+        } else if (diffInSeconds < 3600) {
+          const minutes = Math.floor(diffInSeconds / 60)
+          setTimeAgo(`updated ${minutes} minute${minutes > 1 ? 's' : ''} ago`)
+        } else if (diffInSeconds < 86400) {
+          const hours = Math.floor(diffInSeconds / 3600)
+          setTimeAgo(`updated ${hours} hour${hours > 1 ? 's' : ''} ago`)
+        } else {
+          const days = Math.floor(diffInSeconds / 86400)
+          setTimeAgo(`updated ${days} day${days > 1 ? 's' : ''} ago`)
+        }
+      }
     }
 
-    setTimeAgo(updateTimeAgo())
-    const interval = setInterval(() => setTimeAgo(updateTimeAgo()), 60000)
+    updateTimeAgo()
+    const interval = setInterval(updateTimeAgo, 1000) // Update every second
+
     return () => clearInterval(interval)
-  }, [lastModified])
-
-  const handleContentChange = (e) => {
-    setNotes(e.target.value)
-    setLastModified(new Date())
-    
-    // Save to localStorage
-    if (activeBoard?.id) {
-      localStorage.setItem(`board_notes_${activeBoard.id}`, e.target.value)
-    }
-  }
+  }, [activeBoard])
 
   const handleTitleClick = () => {
     setIsEditingTitle(true)
   }
 
   const handleTitleSave = () => {
+    const trimmedTitle = editableTitle.trim()
+    const finalTitle = trimmedTitle || 'Untitled'
+    
+    if (finalTitle !== activeBoard?.name) {
+      const capitalizedTitle = capitalizeFirstLetter(finalTitle)
+      const result = boardStore.renameBoard(activeBoard.id, capitalizedTitle)
+      if (result.success) {
+        setEditableTitle(capitalizedTitle)
+        onBoardUpdate?.()
+      }
+    }
     setIsEditingTitle(false)
-    // Here you would typically save the title to your store/backend
   }
 
   const handleTitleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault()
       handleTitleSave()
     } else if (e.key === 'Escape') {
+      setEditableTitle(activeBoard?.name || 'Untitled')
       setIsEditingTitle(false)
-      setEditableTitle(capitalizeFirstLetter(activeBoard?.name || 'Untitled Canvas'))
     }
   }
 
   const handleShare = () => {
-    // Implement share functionality
-    console.log('Share functionality not yet implemented')
+    console.log('Share functionality')
   }
 
   return (
@@ -100,108 +100,157 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
         width: 400,
         height: '100vh',
         bgcolor: 'background.paper',
-        borderLeft: '1px solid #e0e0e0',
         display: 'flex',
         flexDirection: 'column',
         transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.3s ease-in-out',
         zIndex: 1000,
+        boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.1)',
       }}
     >
-      {/* Header */}
+      {/* Header - matches canvas header exactly */}
       <Box
         sx={{
-          p: 2,
-          borderBottom: '1px solid #e0e0e0',
+          position: 'relative',
+          height: 40,
+          bgcolor: 'white',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          px: 2,
+          py: 1,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Close panel">
-            <IconButton onClick={onClose} size="small">
-              <MenuOpen />
+          <Tooltip title="Close panel" placement="bottom">
+            <IconButton
+              onClick={onClose}
+              size="small"
+              sx={{
+                ml: -0.75, // Negative margin to align with body content
+                color: '#6b7280',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                  color: '#374151',
+                },
+              }}
+            >
+              <MenuOpen sx={{ fontSize: 16, transform: 'scaleX(-1)' }} />
             </IconButton>
           </Tooltip>
-          
+        </Box>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title="Share" placement="bottom">
+            <Button
+              onClick={handleShare}
+              size="small"
+              sx={{
+                color: '#6b7280',
+                fontSize: '13px',
+                fontWeight: 400,
+                textTransform: 'none',
+                minWidth: 'auto',
+                padding: '4px 8px',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                  color: '#374151',
+                },
+              }}
+            >
+              Share
+            </Button>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        {/* Title section with consistent padding */}
+        <Box sx={{ px: 2, pt: 2.5, pb: 0.5 }}>
           {isEditingTitle ? (
             <TextField
               value={editableTitle}
               onChange={(e) => setEditableTitle(e.target.value)}
               onBlur={handleTitleSave}
               onKeyDown={handleTitleKeyDown}
+              onFocus={(e) => e.target.select()}
+              placeholder="Untitled"
               autoFocus
+              variant="standard"
               size="small"
-              sx={{ width: 200 }}
+              fullWidth
+              sx={{
+                '& .MuiInput-root': {
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  color: '#333333',
+                  '&:before': { borderBottom: 'none' },
+                  '&:after': { borderBottom: 'none' },
+                  '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                },
+                '& .MuiInput-input': {
+                  padding: '0',
+                  fontSize: '18px',
+                  fontWeight: 600,
+                },
+              }}
             />
           ) : (
-            <Typography
-              variant="h6"
-              onClick={handleTitleClick}
-              sx={{
-                cursor: 'pointer',
-                '&:hover': { opacity: 0.8 },
-              }}
-            >
-              {editableTitle}
-            </Typography>
+            <Tooltip title="Click to edit title" placement="bottom">
+              <Typography
+                variant="h6"
+                onClick={handleTitleClick}
+                sx={{
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  color: (activeBoard?.name && activeBoard.name !== 'Untitled') ? '#333333' : '#999999',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.8,
+                  },
+                }}
+              >
+                {activeBoard?.name || 'Untitled'}
+              </Typography>
+            </Tooltip>
           )}
         </Box>
-        
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Settings">
-            <IconButton size="small">
-              <Settings />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
 
-      {/* Main Content Area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            Last modified: {timeAgo}
-          </Typography>
-        </Box>
-
-        {/* Notes Section */}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Notes
-          </Typography>
-          <TextareaAutosize
-            minRows={10}
-            placeholder="Add your notes here..."
-            value={notes}
-            onChange={handleContentChange}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #e0e0e0',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              resize: 'vertical',
-              outline: 'none',
+        {/* Timestamp - close to heading */}
+        <Box sx={{ px: 2, pb: 2.5 }}>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: '#999999',
+              fontSize: '13px',
+              fontWeight: 400,
             }}
-          />
+          >
+            {timeAgo}
+          </Typography>
         </Box>
-      </Box>
 
-      {/* Footer */}
-      <Box
-        sx={{
-          p: 2,
-          borderTop: '1px solid #e0e0e0',
-          display: 'flex',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Button variant="outlined" size="small" onClick={handleShare}>
-          Share
-        </Button>
+        {/* Body Content - centered when empty */}
+        <Box sx={{ 
+          flex: 1, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          px: 2 
+        }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#d1d5db',
+              fontSize: '14px',
+              lineHeight: 1.6,
+              textAlign: 'center'
+            }}
+          >
+            Waiting for your inputs
+          </Typography>
+        </Box>
       </Box>
     </Box>
   )
