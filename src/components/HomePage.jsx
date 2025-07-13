@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, Button, TextField, IconButton, Tooltip } from '@mui/material'
-import { Star, StarBorder, Delete, Add, Search } from '@mui/icons-material'
+import { Box, Typography, Button, TextField } from '@mui/material'
+import { Add, Search } from '@mui/icons-material'
 import { boardStore } from '../stores/boardStore'
 
 const HomePage = ({ onStartThinking, onSelectBoard }) => {
@@ -16,7 +16,6 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
         await boardStore.initialize()
       }
       const allBoards = boardStore.getBoards()
-      console.log('📋 Loaded boards:', allBoards.map(b => ({ id: b.id, name: b.name, isStarred: b.isStarred })))
       setBoards(allBoards)
     }
     loadBoards()
@@ -24,7 +23,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
     // Listen for board changes
     const unsubscribe = boardStore.addChangeListener((event, data) => {
       console.log('📢 Board store event:', event, data)
-      if (event === 'board_star_toggled' || event === 'board_deleted' || event === 'board_created') {
+      if (event === 'board_created') {
         console.log('🔄 Reloading boards after:', event)
         loadBoards()
       }
@@ -39,13 +38,6 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   const filteredBoards = boards.filter(board =>
     board.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  // Separate and sort boards
-  const starredBoards = filteredBoards.filter(board => board.isStarred)
-  const unstarredBoards = filteredBoards.filter(board => !board.isStarred)
-  
-  console.log('⭐ Starred boards:', starredBoards.length)
-  console.log('📄 Unstarred boards:', unstarredBoards.length)
 
   // Group unstarred boards by date
   const groupBoardsByDate = (boards) => {
@@ -68,32 +60,9 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
     return sortedDates.map(date => ({ date, boards: groups[date] }))
   }
 
-  const groupedBoards = groupBoardsByDate(unstarredBoards)
+  const groupedBoards = groupBoardsByDate(filteredBoards)
 
-  // Handle board actions
-  const handleStarToggle = async (boardId) => {
-    console.log('🌟 Toggling star for board:', boardId)
-    const result = await boardStore.toggleBoardStar(boardId)
-    if (!result.success) {
-      console.error('Failed to toggle star:', result.error)
-      alert('Failed to update board. Please try again.')
-    } else {
-      console.log('✅ Star toggled successfully:', result.isStarred)
-    }
-    // Boards will be reloaded via the change listener
-  }
-
-  const handleDeleteBoard = async (boardId) => {
-    console.log('🗑️ Deleting board:', boardId)
-    const result = await boardStore.deleteBoard(boardId)
-    if (!result.success) {
-      console.error('Failed to delete board:', result.error)
-      alert('Failed to delete board. Please try again.')
-    } else {
-      console.log('✅ Board deleted successfully')
-    }
-    // Boards will be reloaded via the change listener
-  }
+  // Handle board actions (star and delete temporarily removed)
 
   const handleNewBoard = async () => {
     const result = await boardStore.createBoard('Untitled Canvas')
@@ -201,74 +170,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
           </Box>
         </Box>
 
-        {/* Starred Boards (no heading, just show at top) */}
-        {starredBoards.length > 0 && (
-          <Box sx={{ mb: 6 }}>
-            {starredBoards.map((board) => (
-              <Box
-                key={board.id}
-                onClick={() => handleBoardClick(board)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  py: 1.5,
-                  px: 0,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
-                  '&:hover': {
-                    bgcolor: '#f9fafb',
-                  },
-                }}
-              >
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleStarToggle(board.id)
-                  }}
-                  size="small"
-                  sx={{ 
-                    mr: 2, 
-                    color: '#fbbf24',
-                    '&:hover': { bgcolor: 'transparent' }
-                  }}
-                >
-                  <Star sx={{ fontSize: 16 }} />
-                </IconButton>
-                
-                <Typography
-                  sx={{
-                    flex: 1,
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: '#333333',
-                  }}
-                >
-                  {board.name}
-                </Typography>
-                
-                <Tooltip title="Delete board" placement="top">
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteBoard(board.id)
-                    }}
-                    size="small"
-                    sx={{ 
-                      color: '#9ca3af',
-                      '&:hover': { 
-                        color: '#ef4444',
-                        bgcolor: 'transparent'
-                      }
-                    }}
-                  >
-                    <Delete sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            ))}
-          </Box>
-        )}
+
 
         {/* Date-grouped Boards */}
         {groupedBoards.map((group) => (
@@ -303,24 +205,6 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
                   },
                 }}
               >
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleStarToggle(board.id)
-                  }}
-                  size="small"
-                  sx={{ 
-                    mr: 2, 
-                    color: '#d1d5db',
-                    '&:hover': { 
-                      color: '#fbbf24',
-                      bgcolor: 'transparent'
-                    }
-                  }}
-                >
-                  <StarBorder sx={{ fontSize: 16 }} />
-                </IconButton>
-                
                 <Typography
                   sx={{
                     flex: 1,
@@ -331,25 +215,6 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
                 >
                   {board.name}
                 </Typography>
-                
-                <Tooltip title="Delete board" placement="top">
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteBoard(board.id)
-                    }}
-                    size="small"
-                    sx={{ 
-                      color: '#9ca3af',
-                      '&:hover': { 
-                        color: '#ef4444',
-                        bgcolor: 'transparent'
-                      }
-                    }}
-                  >
-                    <Delete sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
               </Box>
             ))}
           </Box>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Typography, IconButton, TextField, Tooltip } from '@mui/material'
-import { Star, StarBorder, MenuOpen, AutoAwesomeMosaic } from '@mui/icons-material'
+import { MenuOpen, AutoAwesomeMosaic } from '@mui/icons-material'
 import { boardStore } from '../stores/boardStore'
 
 function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome }) {
   const [isEditing, setIsEditing] = useState(false)
   const [boardName, setBoardName] = useState(activeBoard?.name || '')
-  const [isFavorite, setIsFavorite] = useState(false)
+  // Star state temporarily removed
   const [timeAgo, setTimeAgo] = useState('')
 
   // Update board name when activeBoard changes
@@ -74,9 +74,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
     }
   }
 
-  const handleStarClick = () => {
-    setIsFavorite(!isFavorite)
-  }
+  // Star functionality temporarily removed
 
   const handleSidebarClick = () => {
     onSidePanelOpen?.()
@@ -207,21 +205,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
         >
           {timeAgo}
         </Typography>
-        <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"} placement="bottom">
-          <IconButton
-            onClick={handleStarClick}
-            size="small"
-            sx={{
-              color: isFavorite ? '#fbbf24' : '#d1d5db',
-              '&:hover': {
-                bgcolor: 'transparent',
-                color: isFavorite ? '#f59e0b' : '#9ca3af',
-              },
-            }}
-          >
-            {isFavorite ? <Star sx={{ fontSize: 16 }} /> : <StarBorder sx={{ fontSize: 16 }} />}
-          </IconButton>
-        </Tooltip>
+
         <Tooltip title="Open side panel" placement="bottom">
           <IconButton
             onClick={handleSidebarClick}

@@ -102,13 +102,6 @@ class BoardStore {
         this.boards = Array.isArray(result.data.boards) ? result.data.boards : [];
         this.activeBoardId = result.data.activeBoardId || null;
         
-        // Migrate existing boards to include isStarred property
-        this.boards.forEach(board => {
-          if (board.isStarred === undefined) {
-            board.isStarred = false;
-          }
-        });
-        
         // Find active board object
         if (this.activeBoardId) {
           this.activeBoard = this.boards.find(b => b.id === this.activeBoardId);
@@ -203,7 +196,6 @@ class BoardStore {
       name: name,
       createdAt: now,
       lastModified: now,
-      isStarred: false, // Add isStarred property
       owner: user?.userId || 'anonymous',
       version: '1.0.0',
       metadata: {
