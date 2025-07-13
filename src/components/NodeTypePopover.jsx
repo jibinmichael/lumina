@@ -11,10 +11,10 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       icon: '🔍',
       title: 'Explore the Idea',
       items: [
-        { id: 'quick-question', label: 'Question to Consider', nodeType: 'question', behaviorType: '1-to-1' },
-        { id: 'different-angles', label: 'See Different Angles', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'see-different-angles' },
-        { id: 'perspective-shift', label: 'Perspective Shift', nodeType: 'custom', behaviorType: '1-to-1' },
-        { id: 'similar-stuff', label: 'Find Similar Ideas', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'similar-stuff' }
+        { id: 'quick-question', label: 'Question to Consider', nodeType: 'question', behaviorType: '1-to-1', icon: '❓' },
+        { id: 'different-angles', label: 'See Different Angles', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'see-different-angles', icon: '🔄' },
+        { id: 'perspective-shift', label: 'Perspective Shift', nodeType: 'custom', behaviorType: '1-to-1', icon: '🧭' },
+        { id: 'similar-stuff', label: 'Find Similar Ideas', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'similar-stuff', icon: '🧩' }
       ]
     },
     {
@@ -22,10 +22,10 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       icon: '💡',
       title: 'Expand with Creativity',
       items: [
-        { id: 'fresh-ideas', label: 'Find Fresh Ideas', nodeType: 'ideate', behaviorType: '1-to-1' },
-        { id: 'shift-perspectives', label: 'Shift Perspectives', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'shift-perspectives' },
-        { id: 'brainstorm', label: 'Generate Variations', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'ideate' },
-        { id: 'explore-deeper', label: 'Explore Further', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'rabbit-hole' }
+        { id: 'fresh-ideas', label: 'Find Fresh Ideas', nodeType: 'ideate', behaviorType: '1-to-1', icon: '💡' },
+        { id: 'shift-perspectives', label: 'Shift Perspectives', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'shift-perspectives', icon: '🔀' },
+        { id: 'brainstorm', label: 'Generate Variations', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'ideate', icon: '🌱' },
+        { id: 'explore-deeper', label: 'Explore Further', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'rabbit-hole', icon: '🚀' }
       ]
     },
     {
@@ -193,7 +193,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
                 }}
               >
                 <span style={{ fontSize: '14px', marginRight: '8px' }}>
-                  {nodeTypeDef?.icon || '⚙️'}
+                  {item.icon || nodeTypeDef?.icon || '⚙️'}
                 </span>
                 <span style={{ flex: 1, color: '#374151' }}>
                   {item.label}

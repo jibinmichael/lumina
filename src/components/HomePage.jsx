@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Box, Typography, Button, TextField } from '@mui/material'
 import { Add, Search } from '@mui/icons-material'
+import Skeleton from '@mui/material/Skeleton'
 import { boardStore } from '../stores/boardStore'
 
 const HomePage = ({ onStartThinking, onSelectBoard }) => {
@@ -11,12 +12,14 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   // Load boards
   useEffect(() => {
     const loadBoards = async () => {
+      setIsLoading(true); // Start loading
       // Wait for board store to be initialized
       if (!boardStore.isInitialized) {
         await boardStore.initialize()
       }
       const allBoards = boardStore.getBoards()
       setBoards(allBoards)
+      setIsLoading(false); // Done loading
     }
     loadBoards()
 
@@ -92,6 +95,8 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
       }}
     >
       <Box sx={{ width: 580, maxHeight: '80vh', overflow: 'auto' }}>
+        {/* All content inside this box will have consistent left padding */}
+        <Box sx={{ pl: 2 }}>
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 5 }}>
           <Typography
@@ -173,56 +178,63 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
 
 
         {/* Date-grouped Boards */}
-        {groupedBoards.map((group) => (
-          <Box key={group.date} sx={{ mb: 6 }}>
-            <Typography
-              sx={{
-                fontSize: '11px',
-                fontWeight: 500,
-                color: '#6b7280',
-                mb: 1,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                px: 2,
-              }}
-            >
-              {group.date}
-            </Typography>
-            
-            {group.boards.map((board) => (
-              <Box
-                key={board.id}
-                onClick={() => handleBoardClick(board)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  py: 1.5,
-                  px: 2,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
-                  '&:hover': {
-                    bgcolor: '#f9fafb',
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    flex: 1,
-                    fontSize: '13px',
-                    fontWeight: 400,
-                    color: '#333333',
-                  }}
-                >
-                  {board.name}
-                </Typography>
-              </Box>
+        {isLoading ? (
+          <Box>
+            {[1,2,3].map((i) => (
+              <Skeleton key={i} variant="rectangular" height={36} sx={{ borderRadius: '6px', mb: 2 }} />
             ))}
           </Box>
-        ))}
+        ) : (
+          groupedBoards.map((group) => (
+            <Box key={group.date} sx={{ mb: 6 }}>
+              <Typography
+                sx={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: '#6b7280',
+                  mb: 1,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {group.date}
+              </Typography>
+              {group.boards.map((board) => (
+                <Box
+                  key={board.id}
+                  onClick={() => handleBoardClick(board)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    py: 1.5,
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                    ml: -2, // extend background to left edge
+                    pl: 2,  // keep text aligned
+                    '&:hover': {
+                      bgcolor: '#f9fafb',
+                    },
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      flex: 1,
+                      fontSize: '13px',
+                      fontWeight: 400,
+                      color: '#333333',
+                    }}
+                  >
+                    {board.name}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          ))
+        )}
 
         {/* Empty State */}
-        {filteredBoards.length === 0 && (
+        {isLoading ? null : filteredBoards.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 6 }}>
             <Typography
               sx={{
@@ -254,6 +266,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
             )}
           </Box>
         )}
+       </Box>
       </Box>
     </Box>
   )

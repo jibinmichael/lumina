@@ -21,7 +21,7 @@ const MultiOptionNode = ({ data, id }) => {
     switch (data.nodeType) {
       case 'see-different-angles':
         return {
-          emoji: '👁️',
+          emoji: '🔄',
           options: [
             'User Perspective',
             'Competitor View',
@@ -32,7 +32,7 @@ const MultiOptionNode = ({ data, id }) => {
         }
       case 'similar-stuff':
         return {
-          emoji: '🔗',
+          emoji: '🧩',
           options: [
             'Related Theme',
             'Analogous Situation',
@@ -43,7 +43,7 @@ const MultiOptionNode = ({ data, id }) => {
         }
       case 'rabbit-hole':
         return {
-          emoji: '🕳️',
+          emoji: '🚀',
           options: [
             'What if…',
             'Why might…',
@@ -54,7 +54,7 @@ const MultiOptionNode = ({ data, id }) => {
         }
       case 'ideate':
         return {
-          emoji: '🚀',
+          emoji: '🌱',
           options: [
             'Wild Take',
             'Simple Fix',
@@ -83,7 +83,7 @@ const MultiOptionNode = ({ data, id }) => {
         }
       case 'shift-perspectives':
         return {
-          emoji: '📽️',
+          emoji: '🔀',
           options: [
             'What would an outsider say?',
             'Use a metaphor',
