@@ -31,7 +31,7 @@ import {
   CheckCircle,
   AutorenewIcon
 } from '@mui/icons-material'
-// import synthesisStore from '../stores/synthesisStore'
+import synthesisStore from '../stores/synthesisStore'
 
 const SidePanel = ({ isOpen, onClose, activeBoard }) => {
   const [timeAgo, setTimeAgo] = useState('')
@@ -113,17 +113,17 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
       }
     }
 
-    // synthesisStore.addChangeListener(handleSynthesisChange)
-    
-    // Initialize state from store
-    // setSynthesis(synthesisStore.getCurrentSynthesis())
-    // setSynthesisStatus(synthesisStore.getStatus())
-    // setSynthesisError(synthesisStore.getLastError())
-    // setAiEnabled(synthesisStore.isSynthesisEnabled())
+         synthesisStore.addChangeListener(handleSynthesisChange)
+      
+      // Initialize state from store
+     setSynthesis(synthesisStore.getCurrentSynthesis())
+     setSynthesisStatus(synthesisStore.getStatus())
+     setSynthesisError(synthesisStore.getLastError())
+     setAiEnabled(synthesisStore.isSynthesisEnabled())
 
-    return () => {
-      // synthesisStore.removeChangeListener(handleSynthesisChange)
-    }
+      return () => {
+       synthesisStore.removeChangeListener(handleSynthesisChange)
+      }
   }, [])
 
   // Load API key from localStorage on mount
@@ -150,16 +150,16 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
       // Save to localStorage
       localStorage.setItem('lumina_openai_key', key)
       
-      // Initialize synthesis store
-      // const success = await synthesisStore.initialize(key)
-      
-      // if (success) {
-        setShowSettings(false)
-        setApiKey(key)
-        console.log('AI Synthesis Engine initialized successfully')
-      // } else {
-      //   setSynthesisError('Failed to initialize AI service. Please check your API key.')
-      // }
+              // Initialize synthesis store
+       const success = await synthesisStore.initialize(key)
+        
+       if (success) {
+          setShowSettings(false)
+          setApiKey(key)
+          console.log('AI Synthesis Engine initialized successfully')
+       } else {
+         setSynthesisError('Failed to initialize AI service. Please check your API key.')
+       }
     } catch (error) {
       setSynthesisError(`Setup failed: ${error.message}`)
     } finally {
@@ -167,20 +167,20 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
     }
   }
 
-  // Handle manual synthesis trigger
-  const handleRefreshSynthesis = () => {
-    // synthesisStore.triggerSynthesis()
-  }
+      // Handle manual synthesis trigger
+    const handleRefreshSynthesis = () => {
+     synthesisStore.triggerSynthesis()
+    }
 
-  // Handle clear synthesis
-  const handleClearSynthesis = () => {
-    // synthesisStore.clearSynthesis()
-  }
+    // Handle clear synthesis
+    const handleClearSynthesis = () => {
+     synthesisStore.clearSynthesis()
+    }
 
-  // Handle AI toggle
-  const handleAiToggle = (enabled) => {
-    // synthesisStore.setEnabled(enabled)
-  }
+    // Handle AI toggle
+    const handleAiToggle = (enabled) => {
+     synthesisStore.setEnabled(enabled)
+    }
 
   // Handle content change (for manual editing)
   const handleContentChange = (e) => {

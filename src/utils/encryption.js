@@ -169,7 +169,7 @@ class EncryptionManager {
   generateSalt(fingerprint) {
     const encoder = new TextEncoder();
     const data = encoder.encode(fingerprint + 'lumina-salt');
-    const hash = this.simpleHash(data);
+    let hash = this.simpleHash(data);
     
     // Create 16-byte salt
     const salt = new Uint8Array(ENCRYPTION_CONFIG.SALT_LENGTH);
