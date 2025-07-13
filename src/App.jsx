@@ -52,7 +52,8 @@ const createInitialNodes = (refIdCounter = 1) => [
     data: { 
       text: '', 
       type: 'seed',
-      refId: `N${refIdCounter.toString().padStart(3, '0')}` // Unique reference ID
+      refId: `N${refIdCounter.toString().padStart(3, '0')}`, // Unique reference ID
+      timestamp: Date.now() // Add timestamp for tracking
     },
     draggable: true // Make seed node draggable
   }
@@ -453,7 +454,8 @@ function AppContent() {
         nodeType: 'generated',
         refId: newRefId,
         draggable: true,
-        placeholder: 'Write your thought or insight here...'
+        placeholder: 'Write your thought or insight here...',
+        timestamp: Date.now() // Add timestamp for tracking
       }
     }
     
@@ -500,7 +502,8 @@ function AppContent() {
         content: '', 
         nodeType: nodeType.multiType || nodeType.id, // Use multiType for multi-option nodes
         refId: newRefId, // Add unique reference ID
-        draggable: true 
+        draggable: true,
+        timestamp: Date.now() // Add timestamp for tracking
       }
     }
     

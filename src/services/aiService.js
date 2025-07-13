@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import systemPrompt from '../config/aiSystemPrompt.js'
 import API_CONFIG from '../config/apiConfig.js'
+import debugLogger from '../utils/debugLogger.js'
 
 // Configuration
 const AI_SERVICE_CONFIG = {
@@ -99,6 +100,7 @@ class AIService {
 
       // Make API call
       this.requestTimestamps.push(Date.now())
+      const startTime = Date.now()
       
       const completion = await this.openai.chat.completions.create({
         model: AI_SERVICE_CONFIG.MODEL,
@@ -114,12 +116,20 @@ class AIService {
       })
 
       const synthesis = completion.choices[0]?.message?.content || ''
+      const duration = Date.now() - startTime
+      
+      // Log synthesis operation
+      debugLogger.logSynthesis(null, nodes, synthesis, duration)
+      
       this.lastError = null
       
       return { success: true, synthesis }
     } catch (error) {
       console.error('AI synthesis error:', error)
       this.lastError = error.message
+      
+      // Log error
+      debugLogger.logError('generateSynthesis', error, { nodeCount: nodes.length })
       
       // Handle specific OpenAI errors
       if (error.status === 401) {
@@ -180,9 +190,13 @@ class AIService {
 
       const placeholder = completion.choices[0]?.message?.content || ''
       
+      // Log placeholder generation
+      debugLogger.logPlaceholder(nodeType, nodeType, context, placeholder)
+      
       return { success: true, placeholder }
     } catch (error) {
       console.error('Placeholder generation error:', error)
+      debugLogger.logError('generatePlaceholder', error, { nodeType })
       // Fail silently for placeholders
       return { success: false, placeholder: '' }
     }

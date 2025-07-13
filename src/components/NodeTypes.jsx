@@ -9,8 +9,12 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
   const { getViewport, getNodes, setNodes } = useReactFlow()
   const [content, setContent] = useState(data.content || '')
   
-  // Use dynamic placeholder
-  const { placeholder: dynamicPlaceholder } = useDynamicPlaceholder(id, data.type || className, placeholder)
+  // Use dynamic placeholder with hover support
+  const { 
+    placeholder: dynamicPlaceholder, 
+    handleMouseEnter, 
+    handleMouseLeave 
+  } = useDynamicPlaceholder(id, data.type || className, placeholder)
 
   // Lightweight auto-resize function with micro-debounce
   const resizeTimeoutRef = useRef(null)
@@ -75,7 +79,8 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
             ...node,
             data: {
               ...node.data,
-              content: newContent
+              content: newContent,
+              lastModified: Date.now() // Track when content was last modified
             }
           }
         }
@@ -106,7 +111,8 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
           ...node,
           data: {
             ...node.data,
-            content: content
+            content: content,
+            lastModified: Date.now() // Track when content was last modified
           }
         }
       }
@@ -222,7 +228,11 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
   }
 
   return (
-    <div className={`base-node ${className}`}>
+    <div 
+      className={`base-node ${className}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="node-header">
         <span className="node-icon">{data.icon || icon}</span>
         <h3>{data.label || title}</h3>

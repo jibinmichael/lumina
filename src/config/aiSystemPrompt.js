@@ -34,6 +34,16 @@ SYNTHESIS DOCUMENT (Side Panel Summary):
   • Mirror user's phrasing and tone
   • Reference node IDs (e.g., "See: N014")
   • Never reword or reinterpret
+  • Use markdown formatting with ### for section headers
+  • Structure output as:
+    ### Questions (from N001, N006)
+    - User's exact questions
+    
+    ### Key Ideas (N004, N005)
+    - User's exact ideas
+    
+    ### Insights (N014)
+    > "User's exact insight"
 
 ---
 DYNAMIC PLACEHOLDER GENERATION:

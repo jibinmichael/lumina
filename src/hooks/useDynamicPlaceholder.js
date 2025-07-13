@@ -7,8 +7,10 @@ export const useDynamicPlaceholder = (nodeId, nodeType, defaultPlaceholder) => {
   const { getNodes, getEdges } = useReactFlow()
   const [placeholder, setPlaceholder] = useState(defaultPlaceholder)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const lastContentRef = useRef('')
   const timeoutRef = useRef(null)
+  const hoverTimeoutRef = useRef(null)
 
   useEffect(() => {
     // Function to get connected nodes
@@ -81,7 +83,73 @@ export const useDynamicPlaceholder = (nodeId, nodeType, defaultPlaceholder) => {
     }
   }, [nodeId, nodeType, getNodes, getEdges])
 
-  return { placeholder, isGenerating }
+  // Handle hover events
+  const handleMouseEnter = () => {
+    setIsHovering(true)
+    
+    // Trigger placeholder generation on hover after a short delay
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+    
+    hoverTimeoutRef.current = setTimeout(async () => {
+      const node = getNodes().find(n => n.id === nodeId)
+      // Only generate if node is empty
+      if (node && !node.data?.content?.trim()) {
+        // Get connected nodes
+        const edges = getEdges()
+        const nodes = getNodes()
+        const connectedEdges = edges.filter(edge => 
+          edge.target === nodeId || edge.source === nodeId
+        )
+        const connectedNodeIds = connectedEdges.map(edge => 
+          edge.target === nodeId ? edge.source : edge.target
+        )
+        const connectedNodes = nodes.filter(node => connectedNodeIds.includes(node.id))
+        
+        if (connectedNodes.length > 0 && connectedNodes.some(n => n.data?.content?.trim()) && aiService.hasApiKey()) {
+          setIsGenerating(true)
+          try {
+            const result = await aiService.generatePlaceholder(nodeType, connectedNodes)
+            if (result.success && result.placeholder) {
+              setPlaceholder(result.placeholder)
+            }
+          } catch (error) {
+            console.error('Failed to generate placeholder on hover:', error)
+          } finally {
+            setIsGenerating(false)
+          }
+        }
+      }
+    }, 300) // 300ms delay before generating on hover
+  }
+  
+  const handleMouseLeave = () => {
+    setIsHovering(false)
+    
+    // Clear hover timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+      hoverTimeoutRef.current = null
+    }
+  }
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  return { 
+    placeholder, 
+    isGenerating, 
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave
+  }
 }
 
 export default useDynamicPlaceholder 

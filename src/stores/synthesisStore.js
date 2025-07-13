@@ -3,7 +3,7 @@ import aiService from '../services/aiService.js'
 // Configuration
 const SYNTHESIS_CONFIG = {
   STORAGE_PREFIX: 'lumina_synthesis_',
-  DEBOUNCE_DELAY: 3000, // 3 seconds as per spec
+  DEBOUNCE_DELAY: 500, // 500ms as per tech guidelines
   MIN_NODES_FOR_SYNTHESIS: 2
 }
 
