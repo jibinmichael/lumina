@@ -15,6 +15,9 @@ build/
 .env.test.local
 .env.production.local
 
+# API Configuration (contains sensitive keys)
+src/config/apiConfig.js
+
 # IDE files
 .vscode/
 .idea/
