@@ -4,7 +4,16 @@
  */
 
 import OpenAI from 'openai'
-import systemPrompt from '../../ai-system-prompt.js'
+
+// Lazy load system prompt to avoid module loading issues
+let systemPrompt = null
+const loadSystemPrompt = async () => {
+  if (!systemPrompt) {
+    const module = await import('../../ai-system-prompt.js')
+    systemPrompt = module.default
+  }
+  return systemPrompt
+}
 
 class AIService {
   constructor() {
@@ -33,13 +42,13 @@ class AIService {
       this.apiKey = apiKey
       this.openai = new OpenAI({
         apiKey: apiKey,
-        dangerouslyAllowBrowser: true // For client-side usage
+        dangerouslyAllowBrowser: true
       })
 
-      // Test the connection
-      await this.testConnection()
-      this.isInitialized = true
+      // Test the API key with a simple request
+      await this.testApiKey()
       
+      this.isInitialized = true
       console.log('AI Service: Successfully initialized')
       return true
     } catch (error) {
@@ -50,258 +59,215 @@ class AIService {
   }
 
   /**
-   * Test OpenAI connection
+   * Test the API key with a simple request
    * @private
    */
-  async testConnection() {
+  async testApiKey() {
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: 'test' }],
-        max_tokens: 1
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'Hello' }],
+        max_tokens: 5
       })
-      return response.choices[0].message.content
+      
+      if (!response.choices || response.choices.length === 0) {
+        throw new Error('Invalid API response')
+      }
+      
+      console.log('AI Service: API key test successful')
     } catch (error) {
-      throw new Error(`OpenAI connection test failed: ${error.message}`)
+      console.error('AI Service: API key test failed:', error)
+      throw new Error('Invalid API key or API error')
     }
   }
 
   /**
-   * Check if AI service is ready
-   * @returns {boolean}
+   * Process node changes and trigger synthesis
+   * @param {Array} nodes - Current nodes
+   * @param {Array} edges - Current edges
+   * @param {Function} callback - Callback function for synthesis result
    */
-  isReady() {
-    return this.isInitialized && this.openai && this.apiKey
-  }
-
-  /**
-   * Process node content changes and trigger synthesis
-   * @param {Array} nodes - Current nodes array
-   * @param {Array} edges - Current edges array
-   * @param {function} onSynthesisUpdate - Callback for synthesis updates
-   */
-  processNodeChanges(nodes, edges, onSynthesisUpdate) {
-    if (!this.isReady()) {
-      console.warn('AI Service: Not ready for synthesis')
+  async processNodeChanges(nodes, edges, callback) {
+    if (!this.isInitialized) {
+      console.warn('AI Service: Not initialized')
+      callback('', new Error('AI Service not initialized'))
       return
     }
 
-    // Clear existing debounce timer
+    if (this.synthesisInProgress) {
+      console.log('AI Service: Synthesis already in progress, skipping')
+      return
+    }
+
+    // Clear existing timer
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer)
     }
 
     // Set up debounced synthesis
     this.debounceTimer = setTimeout(async () => {
-      await this.synthesizeContent(nodes, edges, onSynthesisUpdate)
+      try {
+        this.synthesisInProgress = true
+        
+        const synthesis = await this.synthesizeNodes(nodes, edges)
+        
+        // Store content for comparison
+        this.lastSynthesisContent = synthesis
+        
+        callback(synthesis, null)
+      } catch (error) {
+        console.error('AI Service: Synthesis failed:', error)
+        callback('', error)
+      } finally {
+        this.synthesisInProgress = false
+      }
     }, this.debounceDelay)
   }
 
   /**
-   * Generate synthesis from node content
-   * @param {Array} nodes - Current nodes array
-   * @param {Array} edges - Current edges array
-   * @param {function} onSynthesisUpdate - Callback for synthesis updates
+   * Synthesize nodes using OpenAI
+   * @param {Array} nodes - Current nodes
+   * @param {Array} edges - Current edges
+   * @returns {Promise<string>} - Synthesis result
    * @private
    */
-  async synthesizeContent(nodes, edges, onSynthesisUpdate) {
-    if (this.synthesisInProgress) {
-      console.log('AI Service: Synthesis already in progress, skipping')
-      return
+  async synthesizeNodes(nodes, edges) {
+    if (!nodes || nodes.length === 0) {
+      return ''
     }
 
     try {
-      this.synthesisInProgress = true
+      // Get system prompt
+      const prompt = await loadSystemPrompt()
       
-      // Extract and format node content
-      const nodeContent = this.extractNodeContent(nodes)
+      // Prepare node content for synthesis
+      const nodeContent = this.prepareNodeContent(nodes, edges)
       
-      // Check if content has changed significantly
-      if (this.hasContentChanged(nodeContent)) {
-        console.log('AI Service: Starting synthesis...')
-        
-        const synthesis = await this.generateSynthesis(nodeContent, edges)
-        
-        // Update the last synthesis content
-        this.lastSynthesisContent = synthesis
-        
-        // Call the callback with the synthesis
-        if (onSynthesisUpdate && typeof onSynthesisUpdate === 'function') {
-          onSynthesisUpdate(synthesis)
-        }
-        
-        console.log('AI Service: Synthesis completed')
-      } else {
-        console.log('AI Service: No significant content changes, skipping synthesis')
-      }
-    } catch (error) {
-      console.error('AI Service: Synthesis failed:', error)
-      
-      // Call callback with error state
-      if (onSynthesisUpdate && typeof onSynthesisUpdate === 'function') {
-        onSynthesisUpdate(null, error)
-      }
-    } finally {
-      this.synthesisInProgress = false
-    }
-  }
-
-  /**
-   * Extract meaningful content from nodes
-   * @param {Array} nodes - Current nodes array
-   * @returns {Object} - Structured node content
-   * @private
-   */
-  extractNodeContent(nodes) {
-    const content = {
-      nodes: [],
-      totalNodes: nodes.length,
-      hasContent: false
-    }
-
-    nodes.forEach((node, index) => {
-      const nodeInfo = {
-        id: `N${String(index + 1).padStart(3, '0')}`, // N001, N002, etc.
-        type: node.type,
-        title: node.data?.title || '',
-        content: node.data?.content || '',
-        position: node.position,
-        hasContent: false
+      if (!nodeContent.trim()) {
+        return ''
       }
 
-      // Check if node has meaningful content
-      if (nodeInfo.title.trim() || nodeInfo.content.trim()) {
-        nodeInfo.hasContent = true
-        content.hasContent = true
-      }
-
-      content.nodes.push(nodeInfo)
-    })
-
-    return content
-  }
-
-  /**
-   * Check if content has changed significantly
-   * @param {Object} newContent - New node content
-   * @returns {boolean} - Whether content has changed
-   * @private
-   */
-  hasContentChanged(newContent) {
-    if (!this.lastSynthesisContent) return true
-
-    // Simple check - compare content length and basic structure
-    const contentString = JSON.stringify(newContent)
-    const lastContentString = JSON.stringify(this.nodeContentHistory.get('last') || {})
-    
-    const hasChanged = contentString !== lastContentString
-    
-    // Update history
-    this.nodeContentHistory.set('last', newContent)
-    
-    return hasChanged
-  }
-
-  /**
-   * Generate AI synthesis using OpenAI
-   * @param {Object} nodeContent - Extracted node content
-   * @param {Array} edges - Current edges array
-   * @returns {Promise<string>} - Generated synthesis
-   * @private
-   */
-  async generateSynthesis(nodeContent, edges) {
-    if (!nodeContent.hasContent) {
-      return '' // Return empty synthesis if no content
-    }
-
-    try {
-      // Format content for AI
-      const formattedContent = this.formatContentForAI(nodeContent, edges)
-      
+      // Create synthesis request
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4', // Use GPT-4 for better synthesis
+        model: 'gpt-4',
         messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: formattedContent
-          }
+          { role: 'system', content: prompt },
+          { role: 'user', content: nodeContent }
         ],
-        max_tokens: 1000,
-        temperature: 0.1, // Low temperature for consistency
-        stream: false
+        max_tokens: 2000,
+        temperature: 0.3
       })
 
-      const synthesis = response.choices[0].message.content.trim()
-      return synthesis
+      if (!response.choices || response.choices.length === 0) {
+        throw new Error('No response from OpenAI')
+      }
 
+      const synthesis = response.choices[0].message.content.trim()
+      console.log('AI Service: Synthesis completed')
+      return synthesis
     } catch (error) {
-      console.error('AI Service: OpenAI API error:', error)
-      throw new Error(`Synthesis generation failed: ${error.message}`)
+      console.error('AI Service: Synthesis error:', error)
+      throw error
     }
   }
 
   /**
-   * Format node content for AI processing
-   * @param {Object} nodeContent - Extracted node content
-   * @param {Array} edges - Current edges array
-   * @returns {string} - Formatted content for AI
+   * Prepare node content for synthesis
+   * @param {Array} nodes - Current nodes
+   * @param {Array} edges - Current edges
+   * @returns {string} - Formatted node content
    * @private
    */
-  formatContentForAI(nodeContent, edges) {
-    let formatted = 'NODE CONTENT FOR SYNTHESIS:\n\n'
+  prepareNodeContent(nodes, edges) {
+    if (!nodes || nodes.length === 0) {
+      return ''
+    }
 
-    // Add each node with its content
-    nodeContent.nodes.forEach(node => {
-      if (node.hasContent) {
-        formatted += `${node.id} (${node.type}):\n`
-        
-        if (node.title.trim()) {
-          formatted += `Title: ${node.title.trim()}\n`
-        }
-        
-        if (node.content.trim()) {
-          formatted += `Content: ${node.content.trim()}\n`
-        }
-        
-        formatted += '\n'
+    const nodeMap = new Map()
+    nodes.forEach(node => {
+      nodeMap.set(node.id, node)
+    })
+
+    let content = 'Current thinking canvas:\n\n'
+    
+    // Add node content with IDs
+    nodes.forEach((node, index) => {
+      const nodeId = `N${String(index + 1).padStart(3, '0')}`
+      const nodeData = node.data || {}
+      const nodeContent = nodeData.content || nodeData.text || ''
+      
+      if (nodeContent.trim()) {
+        content += `${nodeId}: ${nodeContent.trim()}\n\n`
       }
     })
 
     // Add connection information if edges exist
     if (edges && edges.length > 0) {
-      formatted += 'CONNECTIONS:\n'
+      content += '\nConnections:\n'
       edges.forEach(edge => {
-        formatted += `${edge.source} → ${edge.target}\n`
+        const sourceNode = nodeMap.get(edge.source)
+        const targetNode = nodeMap.get(edge.target)
+        
+        if (sourceNode && targetNode) {
+          const sourceIndex = nodes.findIndex(n => n.id === edge.source)
+          const targetIndex = nodes.findIndex(n => n.id === edge.target)
+          
+          if (sourceIndex !== -1 && targetIndex !== -1) {
+            const sourceId = `N${String(sourceIndex + 1).padStart(3, '0')}`
+            const targetId = `N${String(targetIndex + 1).padStart(3, '0')}`
+            content += `${sourceId} → ${targetId}\n`
+          }
+        }
       })
     }
 
-    return formatted
+    return content
   }
 
   /**
    * Get current synthesis status
-   * @returns {Object} - Status information
+   * @returns {boolean} - Whether synthesis is in progress
    */
-  getStatus() {
-    return {
-      isInitialized: this.isInitialized,
-      isReady: this.isReady(),
-      synthesisInProgress: this.synthesisInProgress,
-      hasApiKey: !!this.apiKey,
-      lastSynthesisTime: this.lastSynthesisTime || null
-    }
+  isSynthesizing() {
+    return this.synthesisInProgress
+  }
+
+  /**
+   * Get last synthesis content
+   * @returns {string} - Last synthesis content
+   */
+  getLastSynthesis() {
+    return this.lastSynthesisContent || ''
   }
 
   /**
    * Update API key
    * @param {string} newApiKey - New OpenAI API key
+   * @returns {Promise<boolean>} - Success status
    */
   async updateApiKey(newApiKey) {
-    await this.initialize(newApiKey)
+    return await this.initialize(newApiKey)
+  }
+
+  /**
+   * Clear synthesis history
+   */
+  clearHistory() {
+    this.nodeContentHistory.clear()
+    this.lastSynthesisContent = null
+  }
+
+  /**
+   * Get synthesis statistics
+   * @returns {Object} - Statistics
+   */
+  getStats() {
+    return {
+      isInitialized: this.isInitialized,
+      synthesisInProgress: this.synthesisInProgress,
+      hasApiKey: !!this.apiKey,
+      lastSynthesisLength: this.lastSynthesisContent ? this.lastSynthesisContent.length : 0
+    }
   }
 
   /**
@@ -310,13 +276,16 @@ class AIService {
   destroy() {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer)
+      this.debounceTimer = null
     }
     
     this.openai = null
     this.isInitialized = false
-    this.apiKey = null
     this.synthesisInProgress = false
     this.nodeContentHistory.clear()
+    this.lastSynthesisContent = null
+    
+    console.log('AI Service: Destroyed')
   }
 }
 

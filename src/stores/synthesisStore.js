@@ -3,8 +3,17 @@
  * Manages AI synthesis state and integrates with boardStore
  */
 
-import aiService from '../services/aiService.js'
 import { boardStore } from './boardStore.js'
+
+// Lazy load AI service to avoid circular imports
+let aiService = null
+const loadAiService = async () => {
+  if (!aiService) {
+    const module = await import('../services/aiService.js')
+    aiService = module.default
+  }
+  return aiService
+}
 
 class SynthesisStore {
   constructor() {
@@ -44,7 +53,8 @@ class SynthesisStore {
       this.apiKey = apiKey
       
       // Initialize AI service
-      const aiInitialized = await aiService.initialize(apiKey)
+      const ai = await loadAiService()
+      const aiInitialized = await ai.initialize(apiKey)
       
       if (!aiInitialized) {
         throw new Error('AI Service initialization failed')
@@ -109,7 +119,7 @@ class SynthesisStore {
    * @param {Array} edges - Current edges
    * @private
    */
-  handleNodesChange(nodes, edges) {
+  async handleNodesChange(nodes, edges) {
     if (!this.isInitialized || !this.isEnabled) return
     if (!this.settings.autoSynthesis) return
 
@@ -118,7 +128,8 @@ class SynthesisStore {
     this.notifyListeners('statusChanged', { status: 'processing' })
 
     // Trigger AI synthesis
-    aiService.processNodeChanges(nodes, edges, this.handleSynthesisUpdate)
+    const ai = await loadAiService()
+    ai.processNodeChanges(nodes, edges, this.handleSynthesisUpdate)
   }
 
   /**
@@ -395,7 +406,7 @@ class SynthesisStore {
   /**
    * Clean up resources
    */
-  destroy() {
+  async destroy() {
     this.changeListeners.clear()
     this.synthesisHistory.clear()
     this.isInitialized = false
@@ -405,7 +416,10 @@ class SynthesisStore {
     this.lastError = null
     
     // Clean up AI service
-    aiService.destroy()
+    const ai = await loadAiService()
+    if (ai) {
+      ai.destroy()
+    }
   }
 }
 
