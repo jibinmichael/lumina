@@ -183,6 +183,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
                 mb: 1,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
+                px: 2,
               }}
             >
               {group.date}
@@ -196,7 +197,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
                   display: 'flex',
                   alignItems: 'center',
                   py: 1.5,
-                  px: 0,
+                  px: 2,
                   borderRadius: '6px',
                   cursor: 'pointer',
                   transition: 'background-color 0.15s ease',
