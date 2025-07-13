@@ -10,8 +10,15 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
 
   // Load boards
   useEffect(() => {
-    const allBoards = boardStore.getBoards()
-    setBoards(allBoards)
+    const loadBoards = async () => {
+      // Wait for board store to be initialized
+      if (!boardStore.isInitialized) {
+        await boardStore.initialize()
+      }
+      const allBoards = boardStore.getBoards()
+      setBoards(allBoards)
+    }
+    loadBoards()
   }, [])
 
   // Filter boards based on search
@@ -57,8 +64,8 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
     setFavoriteBoards(newFavorites)
   }
 
-  const handleDeleteBoard = (boardId) => {
-    const result = boardStore.deleteBoard(boardId)
+  const handleDeleteBoard = async (boardId) => {
+    const result = await boardStore.deleteBoard(boardId)
     if (result.success) {
       setBoards(boardStore.getBoards())
       // Remove from favorites if it was starred
@@ -68,8 +75,8 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
     }
   }
 
-  const handleNewBoard = () => {
-    const result = boardStore.createBoard('Untitled Canvas')
+  const handleNewBoard = async () => {
+    const result = await boardStore.createBoard('Untitled Canvas')
     if (result.success) {
       setBoards(boardStore.getBoards())
       // Launch the new board
@@ -78,8 +85,8 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
     }
   }
 
-  const handleBoardClick = (board) => {
-    onSelectBoard?.(board)
+  const handleBoardClick = async (board) => {
+    await onSelectBoard?.(board)
     onStartThinking()
   }
 

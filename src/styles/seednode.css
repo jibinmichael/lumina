@@ -48,7 +48,7 @@
   line-height: 1.4;
   color: #374151;
   min-height: 24px;
-  overflow: hidden;
+  overflow-y: hidden;
   background: transparent;
   padding: 4px 0;
 }

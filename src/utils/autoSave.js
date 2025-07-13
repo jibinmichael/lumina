@@ -10,8 +10,8 @@ import userIdentity from './userIdentity.js';
 
 // Auto-save configuration
 const AUTO_SAVE_CONFIG = {
-  DEBOUNCE_DELAY: 1000, // Wait 1 second after last change
-  IMMEDIATE_SAVE_DELAY: 100, // Save critical data immediately
+  DEBOUNCE_DELAY: 500, // Wait 0.5 seconds after last change (reduced for better UX)
+  IMMEDIATE_SAVE_DELAY: 50, // Save critical data immediately (reduced for faster saves)
   BATCH_SIZE: 10, // Maximum changes to batch together
   RETRY_ATTEMPTS: 3, // Number of retry attempts for failed saves
   RETRY_DELAY: 2000, // Delay between retry attempts
@@ -111,8 +111,13 @@ class AutoSaveManager {
     window.addEventListener('beforeunload', (event) => {
       this.flushAllSaves();
       
-      // Show warning if there are unsaved changes
-      if (this.saveQueue.size > 0 || this.savingInProgress.size > 0) {
+      // Only show warning if there are actual critical unsaved changes
+      // Skip the warning for normal auto-save operations
+      const criticalChanges = Array.from(this.saveQueue.values()).filter(
+        op => op.priority === SAVE_PRIORITY.CRITICAL
+      );
+      
+      if (criticalChanges.length > 0) {
         event.preventDefault();
         event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
         return event.returnValue;
@@ -153,8 +158,8 @@ class AutoSaveManager {
     // Add to change buffer for batching
     this.addToChangeBuffer(saveOperation);
 
-    if (immediate || priority === SAVE_PRIORITY.CRITICAL) {
-      // Save immediately for critical data
+    if (immediate || priority === SAVE_PRIORITY.CRITICAL || priority === SAVE_PRIORITY.HIGH) {
+      // Save immediately for critical and high priority data (like user content)
       this.performSave(saveOperation);
     } else {
       // Schedule debounced save

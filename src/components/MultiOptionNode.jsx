@@ -81,6 +81,47 @@ const MultiOptionNode = ({ data, id }) => {
             'Possible Risk'
           ]
         }
+      case 'shift-perspectives':
+        return {
+          emoji: '📽️',
+          options: [
+            'What would an outsider say?',
+            'Use a metaphor',
+            'Zoom out 10x',
+            'Flip this idea',
+            'Imagine the opposite'
+          ]
+        }
+      case 'clarify-problem':
+        return {
+          emoji: '🧩',
+          options: [
+            'What problem is this solving?',
+            'Root cause?',
+            'What\'s not the problem?',
+            'One-sentence definition'
+          ]
+        }
+      case 'build-on-this':
+        return {
+          emoji: '🧱',
+          options: [
+            'Make this more useful',
+            'Turn into framework',
+            'Draft something here',
+            'Shape a solution'
+          ]
+        }
+      case 'test-thinking':
+        return {
+          emoji: '🧪',
+          options: [
+            'Edge case scenario',
+            'What could go wrong?',
+            'Simulate it',
+            'Real-world walk-through'
+          ]
+        }
       default:
         return {
           emoji: '📝',

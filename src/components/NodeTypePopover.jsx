@@ -23,7 +23,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       title: 'Expand with Creativity',
       items: [
         { id: 'fresh-ideas', label: 'Find Fresh Ideas', nodeType: 'ideate', behaviorType: '1-to-1' },
-        { id: 'do-opposite', label: 'Do the Opposite', nodeType: 'custom', behaviorType: '1-to-1' },
+        { id: 'shift-perspectives', label: 'Shift Perspectives', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'shift-perspectives' },
         { id: 'brainstorm', label: 'Generate Variations', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'ideate' },
         { id: 'explore-deeper', label: 'Explore Further', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'rabbit-hole' }
       ]
@@ -33,7 +33,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       icon: '🎯',
       title: 'Clarify the Problem',
       items: [
-        { id: 'what-problem', label: 'What Problem Does This Solve?', nodeType: 'question', behaviorType: '1-to-1' },
+        { id: 'clarify-problem', label: 'Clarify the Problem', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'clarify-problem' },
         { id: 'define-problem', label: 'Define the Problem', nodeType: 'analyze', behaviorType: '1-to-1' },
         { id: 'key-insights', label: 'Extract Key Insights', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'key-insights' },
         { id: 'summarize', label: 'Key Takeaway', nodeType: 'summarize', behaviorType: '1-to-1' }
@@ -44,9 +44,9 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       icon: '🧪',
       title: 'Test Your Thinking',
       items: [
-        { id: 'try-out', label: 'Try It Out', nodeType: 'custom', behaviorType: '1-to-1' },
+        { id: 'test-thinking', label: 'Test the Thinking', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'test-thinking' },
         { id: 'pros-cons', label: 'List Pros & Cons', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'pros-cons' },
-        { id: 'rewrite', label: 'Rewrite This', nodeType: 'custom', behaviorType: '1-to-1' },
+        { id: 'try-out', label: 'Try It Out', nodeType: 'custom', behaviorType: '1-to-1' },
         { id: 'alternative', label: 'Find an Alternative', nodeType: 'ideate', behaviorType: '1-to-1' }
       ]
     },
@@ -55,7 +55,7 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
       icon: '✍️',
       title: 'Build Toward a Solution',
       items: [
-        { id: 'draft-solution', label: 'Draft a Solution', nodeType: 'custom', behaviorType: '1-to-1' },
+        { id: 'build-on-this', label: 'Build on This', nodeType: 'multi-option', behaviorType: '1-to-many', multiType: 'build-on-this' },
         { id: 'action-steps', label: 'Create Action Steps', nodeType: 'analyze', behaviorType: '1-to-1' },
         { id: 'decision-made', label: 'Decision Made', nodeType: 'decision', behaviorType: '1-to-1' },
         { id: 'my-idea', label: 'Add My Own Idea', nodeType: 'ideate', behaviorType: '1-to-1' }

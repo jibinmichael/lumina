@@ -3,6 +3,7 @@ import { Box, Typography, Alert } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { ReactFlow, ReactFlowProvider, useNodesState, useEdgesState, useReactFlow } from '@xyflow/react'
 import { boardStore } from './stores/boardStore'
+import synthesisStore from './stores/synthesisStore'
 import autoSaveManager, { SAVE_PRIORITY } from './utils/autoSave'
 import userIdentity from './utils/userIdentity'
 import CustomControls from './components/CustomControls'
@@ -111,7 +112,7 @@ function AppContent() {
   })
   
   // Homepage state
-  const [showHomePage, setShowHomePage] = useState(false)
+  const [showHomePage, setShowHomePage] = useState(true)
 
   // Reference ID counter for unique node citations
   const [refIdCounter, setRefIdCounter] = useState(2) // Start at 2 since seed is N001
@@ -265,41 +266,134 @@ function AppContent() {
         currentEdges,
         viewport
       )
+      
+      // Notify synthesis store of node changes
+      synthesisStore.handleNodesChange(currentNodes, currentEdges)
+      
       console.log('💾 Auto-saved nodes and edges')
     } catch (error) {
       console.error('Auto-save failed:', error)
     }
   }, [activeBoard])
 
-  // Enhanced nodes change handler with auto-save
+  // Function to recalculate popover position based on node position
+  const recalculatePopoverPosition = useCallback((nodeId) => {
+    if (!popover.isOpen || popover.sourceNodeId !== nodeId) return
+
+    // Find the node element in the DOM
+    const nodeElement = document.querySelector(`[data-id="${nodeId}"]`)
+    if (!nodeElement) return
+
+    // Find the source handle within the node (right side handle)
+    const handleElement = nodeElement.querySelector('.custom-handle[type="source"]') || 
+                         nodeElement.querySelector('.react-flow__handle-right') ||
+                         nodeElement.querySelector('.custom-handle')
+    
+    let handleRect
+    if (handleElement) {
+      handleRect = handleElement.getBoundingClientRect()
+    } else {
+      // Fallback: use node element and estimate handle position
+      const nodeRect = nodeElement.getBoundingClientRect()
+      handleRect = {
+        right: nodeRect.right - 18, // Handle is 18px from the right edge
+        left: nodeRect.right - 30,  // Handle is about 12px wide
+        top: nodeRect.top + (nodeRect.height / 2) - 6, // Handle is centered vertically
+        height: 12
+      }
+    }
+
+    // Calculate new position using the same logic as in nodes
+    const popoverWidth = 240
+    const popoverHeight = 5 * 56 + 16
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    let popoverX = handleRect.right + 10
+    let popoverY = handleRect.top
+    
+    // Horizontal positioning logic
+    if (popoverX + popoverWidth > viewportWidth - 20) {
+      popoverX = handleRect.left - popoverWidth - 10
+      
+      if (popoverX < 20) {
+        popoverX = Math.max(20, (viewportWidth - popoverWidth) / 2)
+      }
+    }
+    
+    // Vertical positioning logic
+    popoverY = handleRect.top + (handleRect.height / 2) - (popoverHeight / 2)
+    
+    if (popoverY < 20) {
+      popoverY = 20
+    }
+    
+    if (popoverY + popoverHeight > viewportHeight - 20) {
+      popoverY = viewportHeight - popoverHeight - 20
+    }
+    
+    // Final bounds check
+    popoverX = Math.max(20, Math.min(popoverX, viewportWidth - popoverWidth - 20))
+    popoverY = Math.max(20, Math.min(popoverY, viewportHeight - popoverHeight - 20))
+
+    // Update popover position
+    setPopover(prev => ({
+      ...prev,
+      position: { x: popoverX, y: popoverY }
+    }))
+  }, [popover.isOpen, popover.sourceNodeId])
+
+  // Enhanced nodes change handler with auto-save and popover tracking
   const handleNodesChange = useCallback((changes) => {
     onNodesChange(changes)
     
-    // Auto-save after a short delay
+    // Check if the popover source node is being moved and update popover position
+    if (popover.isOpen && popover.sourceNodeId) {
+      const sourceNodeChange = changes.find(
+        change => change.id === popover.sourceNodeId && 
+        (change.type === 'position' || change.type === 'drag')
+      )
+      
+      if (sourceNodeChange) {
+        // Use requestAnimationFrame to ensure DOM has updated
+        requestAnimationFrame(() => {
+          recalculatePopoverPosition(popover.sourceNodeId)
+        })
+      }
+    }
+    
+    // Auto-save with longer delay to avoid interfering with typing
     setTimeout(() => {
       autoSaveNodes(nodes, edges)
-    }, 500)
-  }, [onNodesChange, autoSaveNodes, nodes, edges])
+    }, 2000) // Longer delay to ensure typing isn't interrupted
+  }, [onNodesChange, autoSaveNodes, nodes, edges, popover.isOpen, popover.sourceNodeId, recalculatePopoverPosition])
 
   // Enhanced edges change handler with auto-save  
   const handleEdgesChange = useCallback((changes) => {
     onEdgesChange(changes)
     
-    // Auto-save after a short delay
+    // Auto-save with longer delay to avoid interfering with typing
     setTimeout(() => {
       autoSaveNodes(nodes, edges)
-    }, 500)
+    }, 2000) // Longer delay to ensure typing isn't interrupted
   }, [onEdgesChange, autoSaveNodes, nodes, edges])
 
-  // Handle viewport changes to track zoom
+  // Handle viewport changes to track zoom and update popover position
   const handleViewportChange = useCallback((viewport) => {
     setZoomLevel(Math.round(viewport.zoom * 100))
+    
+    // Update popover position if it's open (for zoom/pan changes)
+    if (popover.isOpen && popover.sourceNodeId) {
+      requestAnimationFrame(() => {
+        recalculatePopoverPosition(popover.sourceNodeId)
+      })
+    }
     
     // Auto-save viewport changes
     if (activeBoard) {
       autoSaveNodes(nodes, edges, viewport)
     }
-  }, [activeBoard, autoSaveNodes, nodes, edges])
+  }, [activeBoard, autoSaveNodes, nodes, edges, popover.isOpen, popover.sourceNodeId, recalculatePopoverPosition])
 
   // Handle board updates from NotionHeader
   const handleBoardUpdate = useCallback(async () => {
@@ -430,17 +524,61 @@ function AppContent() {
     console.log('🔄 App initialization starting...')
     const initialize = async () => {
       const success = await initializeStorageSystems()
-      if (success) {
+      // Only load board data if we're not showing homepage
+      if (success && !showHomePage) {
         await loadBoardData()
       }
     }
     
     initialize()
-  }, [initializeStorageSystems, loadBoardData])
+  }, [initializeStorageSystems, loadBoardData, showHomePage])
+
+  // Handle board selection from homepage
+  const handleSelectBoard = useCallback(async (board) => {
+    if (board) {
+      // Set the board as active in the store (createBoard already does this, but doing it again for other selections)
+      boardStore.setActiveBoard(board.id)
+      
+      // Update local state immediately
+      setActiveBoard(board)
+      
+      // Load the board's nodes
+      const boardNodes = boardStore.getNodesForBoard(board.id)
+      
+      if (boardNodes.nodes && boardNodes.nodes.length > 0) {
+        setNodes(boardNodes.nodes)
+        setEdges(boardNodes.edges || [])
+        
+        // Update ref counter
+        const maxRefId = boardNodes.nodes.reduce((max, node) => {
+          if (node.data.refId) {
+            const refNum = parseInt(node.data.refId.replace('N', ''))
+            return Math.max(max, refNum)
+          }
+          return max
+        }, 0)
+        setRefIdCounter(maxRefId + 1)
+      } else {
+        // Create initial nodes for new board
+        const initialNodes = createInitialNodes(1)
+        setNodes(initialNodes)
+        setEdges(initialEdges)
+        setRefIdCounter(2)
+        
+        // Save initial nodes
+        await boardStore.saveNodesForBoard(
+          board.id, 
+          initialNodes, 
+          initialEdges, 
+          { x: 0, y: 0, zoom: 1 }
+        )
+      }
+    }
+  }, [setNodes, setEdges])
 
   // Show homepage if requested
   if (showHomePage) {
-    return <HomePage onStartThinking={handleStartThinking} onSelectBoard={() => {}} />
+    return <HomePage onStartThinking={handleStartThinking} onSelectBoard={handleSelectBoard} />
   }
 
   if (error) {

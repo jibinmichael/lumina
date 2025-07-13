@@ -1,13 +1,53 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, IconButton, Tooltip, TextField, TextareaAutosize } from '@mui/material'
-import { MenuOpen } from '@mui/icons-material'
+import { 
+  Box, 
+  Typography, 
+  IconButton, 
+  Tooltip, 
+  TextField, 
+  TextareaAutosize, 
+  Button, 
+  Alert, 
+  CircularProgress, 
+  Chip, 
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  Switch,
+  FormControlLabel
+} from '@mui/material'
+import { 
+  MenuOpen, 
+  Settings, 
+  Refresh, 
+  Clear, 
+  Visibility, 
+  VisibilityOff, 
+  Psychology,
+  Error as ErrorIcon,
+  CheckCircle,
+  AutorenewIcon
+} from '@mui/icons-material'
+import synthesisStore from '../stores/synthesisStore'
 
 const SidePanel = ({ isOpen, onClose, activeBoard }) => {
   const [timeAgo, setTimeAgo] = useState('')
   const [lastModified, setLastModified] = useState(new Date())
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editableTitle, setEditableTitle] = useState('')
-  const [content, setContent] = useState('This is where AI insights about your thinking will appear. You can edit this content directly.')
+  
+  // AI Synthesis State
+  const [synthesis, setSynthesis] = useState('')
+  const [synthesisStatus, setSynthesisStatus] = useState('inactive')
+  const [synthesisError, setSynthesisError] = useState(null)
+  const [aiEnabled, setAiEnabled] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [apiKey, setApiKey] = useState('')
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [isSettingUpAI, setIsSettingUpAI] = useState(false)
 
   // Capitalize first letter function
   const capitalizeFirstLetter = (str) => {
@@ -46,9 +86,105 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
     return () => clearInterval(interval)
   }, [lastModified])
 
-  // Handle content change
+  // Set up synthesis store listener
+  useEffect(() => {
+    const handleSynthesisChange = (event, data) => {
+      switch (event) {
+        case 'synthesisChanged':
+          setSynthesis(data.synthesis || '')
+          setLastModified(new Date())
+          break
+        case 'statusChanged':
+          setSynthesisStatus(data.status)
+          break
+        case 'error':
+          setSynthesisError(data.error)
+          setSynthesisStatus('error')
+          break
+        case 'initialized':
+          setAiEnabled(true)
+          setSynthesisError(null)
+          break
+        case 'enabledChanged':
+          setAiEnabled(data.enabled)
+          break
+        default:
+          break
+      }
+    }
+
+    synthesisStore.addChangeListener(handleSynthesisChange)
+    
+    // Initialize state from store
+    setSynthesis(synthesisStore.getCurrentSynthesis())
+    setSynthesisStatus(synthesisStore.getStatus())
+    setSynthesisError(synthesisStore.getLastError())
+    setAiEnabled(synthesisStore.isEnabled())
+
+    return () => {
+      synthesisStore.removeChangeListener(handleSynthesisChange)
+    }
+  }, [])
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('lumina_openai_key')
+    if (storedKey) {
+      setApiKey(storedKey)
+      // Auto-initialize if key exists
+      handleSetupAI(storedKey)
+    }
+  }, [])
+
+  // Handle AI setup
+  const handleSetupAI = async (key = apiKey) => {
+    if (!key.trim()) {
+      setSynthesisError('Please enter your OpenAI API key')
+      return
+    }
+
+    setIsSettingUpAI(true)
+    setSynthesisError(null)
+
+    try {
+      // Save to localStorage
+      localStorage.setItem('lumina_openai_key', key)
+      
+      // Initialize synthesis store
+      const success = await synthesisStore.initialize(key)
+      
+      if (success) {
+        setShowSettings(false)
+        setApiKey(key)
+        console.log('AI Synthesis Engine initialized successfully')
+      } else {
+        setSynthesisError('Failed to initialize AI service. Please check your API key.')
+      }
+    } catch (error) {
+      setSynthesisError(`Setup failed: ${error.message}`)
+    } finally {
+      setIsSettingUpAI(false)
+    }
+  }
+
+  // Handle manual synthesis trigger
+  const handleRefreshSynthesis = () => {
+    synthesisStore.triggerSynthesis()
+  }
+
+  // Handle clear synthesis
+  const handleClearSynthesis = () => {
+    synthesisStore.clearSynthesis()
+  }
+
+  // Handle AI toggle
+  const handleAiToggle = (enabled) => {
+    synthesisStore.setEnabled(enabled)
+  }
+
+  // Handle content change (for manual editing)
   const handleContentChange = (e) => {
-    setContent(e.target.value)
+    setSynthesis(e.target.value)
     setLastModified(new Date())
   }
 
@@ -58,11 +194,8 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
   }
 
   const handleTitleSave = () => {
-    // If title is empty, set it to "Untitled", otherwise capitalize first letter
     const finalTitle = !editableTitle.trim() ? 'Untitled' : capitalizeFirstLetter(editableTitle.trim())
     setEditableTitle(finalTitle)
-    // Here you could add logic to save the title to the board store
-    // For now, we'll just exit edit mode
     setIsEditingTitle(false)
     setLastModified(new Date())
   }
@@ -83,16 +216,31 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
     if (navigator.share) {
       navigator.share({
         title: boardTitle,
-        text: content,
+        text: synthesis,
         url: window.location.href
       })
     } else {
-      // Fallback - copy to clipboard
-      const shareContent = `${boardTitle}\n\n${content}`
+      const shareContent = `${boardTitle}\n\n${synthesis}`
       navigator.clipboard.writeText(shareContent)
       console.log('Content copied to clipboard!')
     }
   }
+
+  // Get status color and icon
+  const getStatusDisplay = () => {
+    switch (synthesisStatus) {
+      case 'processing':
+        return { color: 'orange', icon: <CircularProgress size={12} />, text: 'Processing' }
+      case 'completed':
+        return { color: 'success', icon: <CheckCircle sx={{ fontSize: 12 }} />, text: 'Updated' }
+      case 'error':
+        return { color: 'error', icon: <ErrorIcon sx={{ fontSize: 12 }} />, text: 'Error' }
+      default:
+        return { color: 'default', icon: <Psychology sx={{ fontSize: 12 }} />, text: 'Ready' }
+    }
+  }
+
+  const statusDisplay = getStatusDisplay()
 
   return (
     <Box
@@ -140,30 +288,81 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
           </IconButton>
         </Tooltip>
 
-        {/* Right - Share text button */}
-        <Tooltip title="Share your board" placement="bottom">
-          <Typography
-            onClick={handleShare}
-            sx={{
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#666666',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              '&:hover': {
-                bgcolor: '#f5f5f5',
-                color: '#333333',
-              },
-            }}
-          >
-            Share
-          </Typography>
-        </Tooltip>
+        {/* Right - AI Controls */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* AI Status Chip */}
+          {aiEnabled && (
+            <Chip
+              icon={statusDisplay.icon}
+              label={statusDisplay.text}
+              size="small"
+              color={statusDisplay.color}
+              variant="outlined"
+              sx={{ fontSize: '11px', height: '24px' }}
+            />
+          )}
+
+          {/* AI Controls */}
+          {aiEnabled && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Tooltip title="Refresh synthesis">
+                <IconButton
+                  onClick={handleRefreshSynthesis}
+                  size="small"
+                  disabled={synthesisStatus === 'processing'}
+                  sx={{ color: '#666666' }}
+                >
+                  <Refresh sx={{ fontSize: 14 }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Clear synthesis">
+                <IconButton
+                  onClick={handleClearSynthesis}
+                  size="small"
+                  sx={{ color: '#666666' }}
+                >
+                  <Clear sx={{ fontSize: 14 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+
+          {/* Settings */}
+          <Tooltip title="AI settings">
+            <IconButton
+              onClick={() => setShowSettings(true)}
+              size="small"
+              sx={{ color: '#666666' }}
+            >
+              <Settings sx={{ fontSize: 14 }} />
+            </IconButton>
+          </Tooltip>
+
+          {/* Share */}
+          <Tooltip title="Share your board" placement="bottom">
+            <Typography
+              onClick={handleShare}
+              sx={{
+                fontSize: '13px',
+                fontWeight: 500,
+                color: '#666666',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                '&:hover': {
+                  bgcolor: '#f5f5f5',
+                  color: '#333333',
+                },
+              }}
+            >
+              Share
+            </Typography>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Board Title with Timestamp */}
-      <Box sx={{ px: 3, pt: 2, pb: 3 }}>
+      <Box sx={{ px: 3, pt: 2, pb: 2 }}>
         {isEditingTitle ? (
           <TextField
             value={editableTitle}
@@ -232,12 +431,51 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
         </Typography>
       </Box>
 
-      {/* Simple Text Area */}
+      {/* AI Synthesis Section */}
+      <Box sx={{ px: 3, pb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Psychology sx={{ fontSize: 16, color: '#666666' }} />
+          <Typography sx={{ fontSize: '14px', fontWeight: 500, color: '#666666' }}>
+            AI Synthesis
+          </Typography>
+          {aiEnabled && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={aiEnabled}
+                  onChange={(e) => handleAiToggle(e.target.checked)}
+                  size="small"
+                />
+              }
+              label=""
+              sx={{ ml: 'auto', mr: 0 }}
+            />
+          )}
+        </Box>
+        
+        {synthesisError && (
+          <Alert severity="error" sx={{ mb: 2, fontSize: '13px' }}>
+            {synthesisError}
+          </Alert>
+        )}
+        
+        {!aiEnabled && !synthesisError && (
+          <Alert severity="info" sx={{ mb: 2, fontSize: '13px' }}>
+            Set up your OpenAI API key to enable AI synthesis of your thinking.
+          </Alert>
+        )}
+      </Box>
+
+      {/* Synthesis Content */}
       <Box sx={{ flex: 1, px: 3, pb: 3 }}>
         <TextareaAutosize
-          value={content}
+          value={synthesis}
           onChange={handleContentChange}
-          placeholder="AI insights will appear here..."
+          placeholder={
+            !aiEnabled 
+              ? "Configure AI synthesis in settings to see your thinking organized here..." 
+              : "Your AI synthesis will appear here as you add content to nodes..."
+          }
           style={{
             width: '100%',
             height: '100%',
@@ -253,6 +491,63 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
           }}
         />
       </Box>
+
+      {/* Settings Dialog */}
+      <Dialog open={showSettings} onClose={() => setShowSettings(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>AI Synthesis Settings</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" sx={{ mb: 2, color: '#666666' }}>
+              Enter your OpenAI API key to enable AI synthesis. Your key is stored locally and never shared.
+            </Typography>
+            <TextField
+              fullWidth
+              label="OpenAI API Key"
+              type={showApiKey ? 'text' : 'password'}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-..."
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      edge="end"
+                    >
+                      {showApiKey ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              How it works:
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666666', fontSize: '13px' }}>
+              • The AI silently listens to your node content<br />
+              • It organizes your thoughts without adding new ideas<br />
+              • Synthesis updates automatically after you stop typing<br />
+              • Your thinking remains completely your own
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSettings(false)}>Cancel</Button>
+          <Button
+            onClick={() => handleSetupAI()}
+            variant="contained"
+            disabled={!apiKey.trim() || isSettingUpAI}
+            startIcon={isSettingUpAI ? <CircularProgress size={16} /> : null}
+          >
+            {isSettingUpAI ? 'Setting up...' : 'Save & Enable'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

@@ -325,6 +325,7 @@ class BoardStore {
       
       this.saveBoardsToStorage();
       this.notifyListeners('active_board_changed', { board });
+      this.notifyListeners('boardSwitched', { boardId });
       return true;
     }
     return false;
@@ -459,10 +460,12 @@ class BoardStore {
       board.lastModified = new Date().toISOString();
     }
     
-    await this.saveNodesToStorage();
-    await this.saveBoardsToStorage();
+    // Save immediately for user content changes
+    await this.saveNodesToStorage(true);
+    await this.saveBoardsToStorage(true);
     
     this.notifyListeners('nodes_updated', { boardId, nodeCount: nodes?.length || 0 });
+    this.notifyListeners('nodesChanged', { boardId, nodes, edges });
   }
 
   // Get nodes for board

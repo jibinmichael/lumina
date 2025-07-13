@@ -14,6 +14,7 @@
     "@mui/icons-material": "^5.15.7",
     "@mui/material": "^5.15.7",
     "@xyflow/react": "^12.8.2",
+    "openai": "^5.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
