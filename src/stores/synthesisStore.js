@@ -185,7 +185,7 @@ class SynthesisStore {
    * Check if synthesis is enabled
    * @returns {boolean} - Whether synthesis is enabled
    */
-  isEnabled() {
+  isSynthesisEnabled() {
     return this.isEnabled && this.isInitialized
   }
 

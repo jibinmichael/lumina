@@ -3,7 +3,6 @@ import { Box, Typography, Alert } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { ReactFlow, ReactFlowProvider, useNodesState, useEdgesState, useReactFlow } from '@xyflow/react'
 import { boardStore } from './stores/boardStore'
-import synthesisStore from './stores/synthesisStore'
 import autoSaveManager, { SAVE_PRIORITY } from './utils/autoSave'
 import userIdentity from './utils/userIdentity'
 import CustomControls from './components/CustomControls'
@@ -266,9 +265,6 @@ function AppContent() {
         currentEdges,
         viewport
       )
-      
-      // Notify synthesis store of node changes
-      synthesisStore.handleNodesChange(currentNodes, currentEdges)
       
       console.log('💾 Auto-saved nodes and edges')
     } catch (error) {

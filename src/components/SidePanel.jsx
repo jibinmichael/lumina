@@ -119,7 +119,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard }) => {
     setSynthesis(synthesisStore.getCurrentSynthesis())
     setSynthesisStatus(synthesisStore.getStatus())
     setSynthesisError(synthesisStore.getLastError())
-    setAiEnabled(synthesisStore.isEnabled())
+    setAiEnabled(synthesisStore.isSynthesisEnabled())
 
     return () => {
       synthesisStore.removeChangeListener(handleSynthesisChange)
