@@ -228,10 +228,10 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             size="small"
             sx={{
               position: 'relative',
-              color: '#d1d5db',
+              color: '#6b7280',
               '&:hover': {
                 bgcolor: 'transparent',
-                color: '#9ca3af',
+                color: '#374151',
               },
             }}
           >
