@@ -325,7 +325,6 @@ class BoardStore {
       
       this.saveBoardsToStorage();
       this.notifyListeners('active_board_changed', { board });
-      this.notifyListeners('boardSwitched', { boardId });
       return true;
     }
     return false;
@@ -465,7 +464,6 @@ class BoardStore {
     await this.saveBoardsToStorage(true);
     
     this.notifyListeners('nodes_updated', { boardId, nodeCount: nodes?.length || 0 });
-    this.notifyListeners('nodesChanged', { boardId, nodes, edges });
   }
 
   // Get nodes for board
