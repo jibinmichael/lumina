@@ -392,6 +392,32 @@ class BoardStore {
     }
   }
 
+  // Toggle board favorite/star status
+  async toggleBoardStar(boardId) {
+    try {
+      const boardIndex = this.boards.findIndex(b => b.id === boardId);
+      
+      if (boardIndex !== -1) {
+        this.boards[boardIndex].isStarred = !this.boards[boardIndex].isStarred;
+        this.boards[boardIndex].lastModified = new Date().toISOString();
+        
+        await this.saveBoardsToStorage(true);
+        
+        this.notifyListeners('board_star_toggled', { 
+          boardId, 
+          isStarred: this.boards[boardIndex].isStarred 
+        });
+        
+        return { success: true, isStarred: this.boards[boardIndex].isStarred };
+      } else {
+        return { success: false, error: 'Board not found' };
+      }
+    } catch (error) {
+      console.error('Error toggling board star:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Delete board (enhanced with cleanup)
   async deleteBoard(boardId) {
     try {

@@ -11,6 +11,7 @@ import SeedNode from './components/SeedNode'
 import NodeTypePopover from './components/NodeTypePopover'
 import SidePanel from './components/SidePanel'
 import HomePage from './components/HomePage'
+import synthesisStore from './stores/synthesisStore.js'
 import { 
   QuestionNode, 
   TeachNode, 
@@ -339,7 +340,7 @@ function AppContent() {
     }))
   }, [popover.isOpen, popover.sourceNodeId])
 
-  // Enhanced nodes change handler with auto-save and popover tracking
+  // Enhanced nodes change handler with auto-save, synthesis, and popover tracking
   const handleNodesChange = useCallback((changes) => {
     onNodesChange(changes)
     
@@ -358,21 +359,37 @@ function AppContent() {
       }
     }
     
-    // Auto-save with longer delay to avoid interfering with typing
-    setTimeout(() => {
-      autoSaveNodes(nodes, edges)
-    }, 2000) // Longer delay to ensure typing isn't interrupted
-  }, [onNodesChange, autoSaveNodes, nodes, edges, popover.isOpen, popover.sourceNodeId, recalculatePopoverPosition])
-
-  // Enhanced edges change handler with auto-save  
-  const handleEdgesChange = useCallback((changes) => {
-    onEdgesChange(changes)
+    // Check if any node content changed (dimensions change indicates text update)
+    const hasContentChange = changes.some(change => 
+      change.type === 'dimensions' || 
+      (change.type === 'select' && change.selected)
+    )
+    
+    if (hasContentChange && activeBoard?.id) {
+      // Trigger synthesis update
+      synthesisStore.updateSynthesis(activeBoard.id, nodes)
+    }
     
     // Auto-save with longer delay to avoid interfering with typing
     setTimeout(() => {
       autoSaveNodes(nodes, edges)
     }, 2000) // Longer delay to ensure typing isn't interrupted
-  }, [onEdgesChange, autoSaveNodes, nodes, edges])
+  }, [onNodesChange, autoSaveNodes, nodes, edges, popover.isOpen, popover.sourceNodeId, recalculatePopoverPosition, activeBoard])
+
+  // Enhanced edges change handler with auto-save  
+  const handleEdgesChange = useCallback((changes) => {
+    onEdgesChange(changes)
+    
+    // Trigger synthesis update on edge changes (connections made/removed)
+    if (activeBoard?.id && changes.some(change => change.type === 'add' || change.type === 'remove')) {
+      synthesisStore.updateSynthesis(activeBoard.id, nodes)
+    }
+    
+    // Auto-save with longer delay to avoid interfering with typing
+    setTimeout(() => {
+      autoSaveNodes(nodes, edges)
+    }, 2000) // Longer delay to ensure typing isn't interrupted
+  }, [onEdgesChange, autoSaveNodes, nodes, edges, activeBoard])
 
   // Handle viewport changes to track zoom and update popover position
   const handleViewportChange = useCallback((viewport) => {
@@ -671,6 +688,8 @@ function AppContent() {
         isOpen={sidePanelOpen}
         onClose={handleSidePanelClose}
         activeBoard={activeBoard}
+        onBoardUpdate={handleBoardUpdate}
+        nodes={nodes}
       />
     </Box>
   )

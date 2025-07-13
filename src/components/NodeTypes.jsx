@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Handle, Position, useReactFlow } from '@xyflow/react'
+import useDynamicPlaceholder from '../hooks/useDynamicPlaceholder.js'
 
 // Base node component with shared functionality
 const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder, color }) => {
@@ -7,6 +8,9 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
   const handleRef = useRef(null)
   const { getViewport, getNodes, setNodes } = useReactFlow()
   const [content, setContent] = useState(data.content || '')
+  
+  // Use dynamic placeholder
+  const { placeholder: dynamicPlaceholder } = useDynamicPlaceholder(id, data.type || className, placeholder)
 
   // Lightweight auto-resize function with micro-debounce
   const resizeTimeoutRef = useRef(null)
@@ -227,7 +231,7 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
       <div className="node-input" onClick={(e) => e.stopPropagation()}>
         <textarea 
           ref={textareaRef}
-          placeholder={placeholder}
+          placeholder={dynamicPlaceholder}
           value={content}
           onChange={handleTextChange}
           onInput={handleInput}

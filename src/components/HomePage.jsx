@@ -6,7 +6,6 @@ import { boardStore } from '../stores/boardStore'
 const HomePage = ({ onStartThinking, onSelectBoard }) => {
   const [boards, setBoards] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [favoriteBoards, setFavoriteBoards] = useState(new Set())
 
   // Load boards
   useEffect(() => {
@@ -19,6 +18,17 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
       setBoards(allBoards)
     }
     loadBoards()
+
+    // Listen for board changes
+    const unsubscribe = boardStore.addChangeListener((event) => {
+      if (event === 'board_star_toggled' || event === 'board_deleted' || event === 'board_created') {
+        loadBoards()
+      }
+    })
+
+    return () => {
+      boardStore.removeChangeListener(unsubscribe)
+    }
   }, [])
 
   // Filter boards based on search
@@ -27,8 +37,8 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   )
 
   // Separate and sort boards
-  const starredBoards = filteredBoards.filter(board => favoriteBoards.has(board.id))
-  const unstarredBoards = filteredBoards.filter(board => !favoriteBoards.has(board.id))
+  const starredBoards = filteredBoards.filter(board => board.isStarred)
+  const unstarredBoards = filteredBoards.filter(board => !board.isStarred)
 
   // Group unstarred boards by date
   const groupBoardsByDate = (boards) => {
@@ -54,24 +64,21 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   const groupedBoards = groupBoardsByDate(unstarredBoards)
 
   // Handle board actions
-  const handleStarToggle = (boardId) => {
-    const newFavorites = new Set(favoriteBoards)
-    if (newFavorites.has(boardId)) {
-      newFavorites.delete(boardId)
-    } else {
-      newFavorites.add(boardId)
+  const handleStarToggle = async (boardId) => {
+    const result = await boardStore.toggleBoardStar(boardId)
+    if (!result.success) {
+      console.error('Failed to toggle star:', result.error)
     }
-    setFavoriteBoards(newFavorites)
+    // Boards will be reloaded via the change listener
   }
 
   const handleDeleteBoard = async (boardId) => {
-    const result = await boardStore.deleteBoard(boardId)
-    if (result.success) {
-      setBoards(boardStore.getBoards())
-      // Remove from favorites if it was starred
-      const newFavorites = new Set(favoriteBoards)
-      newFavorites.delete(boardId)
-      setFavoriteBoards(newFavorites)
+    if (window.confirm('Are you sure you want to delete this board?')) {
+      const result = await boardStore.deleteBoard(boardId)
+      if (!result.success) {
+        console.error('Failed to delete board:', result.error)
+      }
+      // Boards will be reloaded via the change listener
     }
   }
 
