@@ -150,7 +150,9 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             value={boardName}
             onChange={(e) => setBoardName(e.target.value)}
             onBlur={handleBoardNameSave}
+            onMouseLeave={handleBoardNameSave}
             onKeyDown={handleBoardNameKeyDown}
+            onFocus={(e) => e.target.select()}
             autoFocus
             variant="standard"
             size="small"
@@ -160,7 +162,8 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
                 fontWeight: 500,
                 color: '#333333',
                 '&:before': { borderBottom: 'none' },
-                '&:after': { borderBottom: '1px solid #2196f3' },
+                '&:after': { borderBottom: 'none' },
+                '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
               },
               '& .MuiInput-input': {
                 padding: '2px 4px',
