@@ -1,17 +1,52 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Typography, IconButton, TextField, Tooltip } from '@mui/material'
-import { MenuOpen, AutoAwesomeMosaic } from '@mui/icons-material'
+import { Box, Typography, IconButton, TextField, Tooltip, Button } from '@mui/material'
+import { AutoAwesomeMosaic, Psychology } from '@mui/icons-material'
 import { boardStore } from '../stores/boardStore'
+import synthesisStore from '../stores/synthesisStore.js'
+import aiService from '../services/aiService.js'
 
 function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome }) {
   const [isEditing, setIsEditing] = useState(false)
   const [boardName, setBoardName] = useState(activeBoard?.name || '')
   // Star state temporarily removed
   const [timeAgo, setTimeAgo] = useState('')
+  const [synthesisReady, setSynthesisReady] = useState(false)
 
   // Update board name when activeBoard changes
   useEffect(() => {
     setBoardName(activeBoard?.name || '')
+  }, [activeBoard])
+
+  // Check if synthesis is ready
+  useEffect(() => {
+    const checkSynthesisReady = () => {
+      if (!aiService.hasApiKey()) {
+        setSynthesisReady(false)
+        return
+      }
+
+      // Get current nodes from board store
+      if (activeBoard?.id) {
+        const boardNodes = boardStore.getNodesForBoard(activeBoard.id)
+        const nodesWithContent = boardNodes.nodes?.filter(node => node.data?.content?.trim()) || []
+        
+        // Synthesis is ready if we have at least 2 nodes with content
+        setSynthesisReady(nodesWithContent.length >= 2)
+      } else {
+        setSynthesisReady(false)
+      }
+    }
+
+    checkSynthesisReady()
+    
+    // Listen for synthesis store updates
+    const unsubscribe = synthesisStore.addListener((event) => {
+      if (event.boardId === activeBoard?.id) {
+        checkSynthesisReady()
+      }
+    })
+
+    return unsubscribe
   }, [activeBoard])
 
   // Real-time metadata updates
@@ -78,8 +113,10 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
 
   // Star functionality temporarily removed
 
-  const handleSidebarClick = () => {
-    onSidePanelOpen?.()
+  const handleSynthesizeClick = () => {
+    if (synthesisReady) {
+      onSidePanelOpen?.()
+    }
   }
 
   const handleHomeClick = () => {
@@ -150,9 +187,9 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             value={boardName}
             onChange={(e) => setBoardName(e.target.value)}
             onBlur={handleBoardNameSave}
-            onMouseLeave={handleBoardNameSave}
             onKeyDown={handleBoardNameKeyDown}
             onFocus={(e) => e.target.select()}
+            placeholder="Untitled"
             autoFocus
             variant="standard"
             size="small"
@@ -166,7 +203,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
                 '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
               },
               '& .MuiInput-input': {
-                padding: '2px 4px',
+                padding: '0',
                 fontSize: '13px',
                 fontWeight: 500,
               },
@@ -182,11 +219,13 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
                 fontWeight: 500,
                 color: '#333333',
                 cursor: 'pointer',
-                padding: '2px 4px',
-                borderRadius: '4px',
                 '&:hover': {
-                  bgcolor: '#f5f5f5',
+                  opacity: 0.8,
                 },
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '200px',
               }}
             >
               {activeBoard?.name || 'Untitled'}
@@ -195,7 +234,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
         )}
       </Box>
 
-      {/* Right side - Icons and metadata */}
+      {/* Right side - Timestamp and Synthesize button */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography
           variant="body2"
@@ -208,35 +247,42 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
           {timeAgo}
         </Typography>
 
-        <Tooltip title="Open side panel" placement="bottom">
-          <IconButton
-            onClick={handleSidebarClick}
-            size="small"
-            sx={{
-              position: 'relative',
-              color: '#6b7280',
-              '&:hover': {
-                bgcolor: 'transparent',
-                color: '#374151',
-              },
-            }}
-          >
-            <MenuOpen sx={{ fontSize: 16 }} />
-            {/* Notification circle indicator */}
-            <Box
+        <Tooltip 
+          title={synthesisReady ? "Open AI synthesis" : "Add more content to enable synthesis"} 
+          placement="bottom"
+        >
+          <span> {/* Wrapper for disabled button tooltip */}
+            <Button
+              onClick={handleSynthesizeClick}
+              disabled={!synthesisReady}
+              size="small"
+              startIcon={<Psychology sx={{ fontSize: 14 }} />}
               sx={{
-                position: 'absolute',
-                top: 2,
-                right: 2,
-                width: 6,
-                height: 6,
-                bgcolor: '#2196f3',
-                borderRadius: '50%',
-                border: '1px solid white',
-                zIndex: 1,
+                fontSize: '11px',
+                fontWeight: 500,
+                textTransform: 'none',
+                px: '8px',
+                py: '3px',
+                minHeight: 24,
+                color: synthesisReady ? '#8b5cf6' : '#cbd5e1',
+                bgcolor: synthesisReady ? '#f3f4f6' : 'transparent',
+                border: synthesisReady ? '1px solid #e5e7eb' : '1px solid transparent',
+                '&:hover': {
+                  bgcolor: synthesisReady ? '#e5e7eb' : 'transparent',
+                  color: synthesisReady ? '#7c3aed' : '#cbd5e1',
+                },
+                '&:disabled': {
+                  color: '#cbd5e1',
+                  bgcolor: 'transparent',
+                },
+                '& .MuiButton-startIcon': {
+                  marginRight: '4px',
+                },
               }}
-            />
-          </IconButton>
+            >
+              Synthesize
+            </Button>
+          </span>
         </Tooltip>
       </Box>
     </Box>

@@ -10,7 +10,7 @@ import {
   Alert
 } from '@mui/material'
 import { 
-  MenuOpen,
+  Close,
   Share,
   Refresh
 } from '@mui/icons-material'
@@ -515,7 +515,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Tooltip title="Close panel" placement="bottom">
+            <Tooltip title="Close synthesis panel" placement="bottom">
               <IconButton
                 onClick={onClose}
                 size="small"
@@ -528,7 +528,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
                   },
                 }}
               >
-                <MenuOpen sx={{ fontSize: 16, transform: 'scaleX(-1)' }} />
+                <Close sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
           </Box>
