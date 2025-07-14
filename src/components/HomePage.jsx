@@ -68,7 +68,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
   // Handle board actions (star and delete temporarily removed)
 
   const handleNewBoard = async () => {
-    const result = await boardStore.createBoard('Untitled Canvas')
+    const result = await boardStore.createBoard('Untitled Thoughtscape')
     if (result.success) {
       setBoards(boardStore.getBoards())
       // Launch the new board

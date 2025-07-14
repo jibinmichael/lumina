@@ -86,7 +86,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
 
   // Capitalize first letter function
   const capitalizeFirstLetter = (str) => {
-    if (!str) return 'Untitled'
+    if (!str) return 'Untitled Thoughtscape'
     return str.charAt(0).toUpperCase() + str.slice(1)
   }
 
@@ -189,7 +189,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             onBlur={handleBoardNameSave}
             onKeyDown={handleBoardNameKeyDown}
             onFocus={(e) => e.target.select()}
-            placeholder="Untitled"
+            placeholder="Untitled Thoughtscape"
             autoFocus
             variant="standard"
             size="small"
@@ -228,7 +228,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
                 maxWidth: '200px',
               }}
             >
-              {activeBoard?.name || 'Untitled'}
+              {activeBoard?.name || 'Untitled Thoughtscape'}
             </Typography>
           </Tooltip>
         )}

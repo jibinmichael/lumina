@@ -232,13 +232,13 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
 
   // Capitalize first letter function
   const capitalizeFirstLetter = (str) => {
-    if (!str) return 'Untitled'
+    if (!str) return 'Untitled Thoughtscape'
     return str.charAt(0).toUpperCase() + str.slice(1)
   }
 
   // Always load the latest synthesis from storage when activeBoard changes
   useEffect(() => {
-    const boardTitle = activeBoard?.name || 'Untitled'
+    const boardTitle = activeBoard?.name || 'Untitled Thoughtscape'
     setEditableTitle(boardTitle)
 
     if (activeBoard?.id) {
@@ -321,7 +321,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
 
   const handleTitleSave = () => {
     const trimmedTitle = editableTitle.trim()
-    const finalTitle = trimmedTitle || 'Untitled'
+    const finalTitle = trimmedTitle || 'Untitled Thoughtscape'
     
     if (finalTitle !== activeBoard?.name) {
       const capitalizedTitle = capitalizeFirstLetter(finalTitle)
@@ -587,7 +587,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
                 onBlur={handleTitleSave}
                 onKeyDown={handleTitleKeyDown}
                 onFocus={(e) => e.target.select()}
-                placeholder="Untitled"
+                placeholder="Untitled Thoughtscape"
                 autoFocus
                 variant="standard"
                 size="small"
@@ -616,7 +616,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
                   sx={{
                     fontSize: '18px',
                     fontWeight: 600,
-                    color: (activeBoard?.name && activeBoard.name !== 'Untitled') ? '#333333' : '#999999',
+                    color: (activeBoard?.name && activeBoard.name !== 'Untitled Thoughtscape') ? '#333333' : '#999999',
                     cursor: 'pointer',
                     '&:hover': {
                       opacity: 0.8,
@@ -628,7 +628,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
                     display: 'block',
                   }}
                 >
-                  {activeBoard?.name || 'Untitled'}
+                  {activeBoard?.name || 'Untitled Thoughtscape'}
                 </Typography>
               </Tooltip>
             )}

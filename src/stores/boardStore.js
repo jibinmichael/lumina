@@ -157,7 +157,7 @@ class BoardStore {
 
   // Create default board if none exists
   async createDefaultBoard() {
-    const defaultBoard = this.createBoardObject('My First Canvas');
+    const defaultBoard = this.createBoardObject('My First Thoughtscape');
     this.boards = [defaultBoard];
     this.activeBoard = defaultBoard;
     this.activeBoardId = defaultBoard.id;
@@ -165,7 +165,7 @@ class BoardStore {
     // Save immediately
     await this.saveBoardsToStorage(true);
     
-    console.log('🆕 Created default board');
+    console.log('🆕 Created default thoughtscape');
   }
 
   // Get default preferences
