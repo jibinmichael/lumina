@@ -264,16 +264,16 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
                 px: '8px',
                 py: '3px',
                 minHeight: 24,
-                color: synthesisReady ? '#8b5cf6' : '#cbd5e1',
-                bgcolor: synthesisReady ? '#f3f4f6' : 'transparent',
-                border: synthesisReady ? '1px solid #e5e7eb' : '1px solid transparent',
+                color: synthesisReady ? '#ffffff' : '#9ca3af',
+                bgcolor: synthesisReady ? '#8b5cf6' : '#f3f4f6',
+                border: 'none',
                 '&:hover': {
-                  bgcolor: synthesisReady ? '#e5e7eb' : 'transparent',
-                  color: synthesisReady ? '#7c3aed' : '#cbd5e1',
+                  bgcolor: synthesisReady ? '#7c3aed' : '#f3f4f6',
+                  color: synthesisReady ? '#ffffff' : '#9ca3af',
                 },
                 '&:disabled': {
-                  color: '#cbd5e1',
-                  bgcolor: 'transparent',
+                  color: '#9ca3af',
+                  bgcolor: '#f3f4f6',
                 },
                 '& .MuiButton-startIcon': {
                   marginRight: '4px',
