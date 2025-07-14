@@ -456,10 +456,9 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
               fontSize: '13px',
               fontWeight: 400,
               pl: 0, // Ensure no extra left padding
-              fontStyle: 'italic',
             }}
           >
-            mapping your beautiful pathway...
+            synthesizing your thoughts...
           </Typography>
         </Box>
       )
