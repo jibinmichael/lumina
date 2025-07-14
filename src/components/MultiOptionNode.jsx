@@ -164,20 +164,26 @@ const MultiOptionNode = ({ data, id, onDelete }) => {
         alignItems: 'center',
         justifyContent: 'space-between'
       }}>
-        <h3 style={{
-          margin: 0,
-          fontSize: '14px',
-          fontWeight: 500,
-          color: '#374151',
-          lineHeight: 1.3,
+        <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          flex: 1
+          gap: '6px',
+          background: '#f5f5f5',
+          padding: '4px 8px',
+          borderRadius: '6px',
+          width: 'fit-content'
         }}>
-          <span style={{ fontSize: '16px' }}>{emoji}</span>
-          {data.label || 'Choose an option...'}
-        </h3>
+          <span style={{ fontSize: '12px' }}>{emoji}</span>
+          <h3 style={{
+            margin: 0,
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#666',
+            lineHeight: 1.3
+          }}>
+            {data.label || 'Choose an option...'}
+          </h3>
+        </div>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete?.(id); }}
           style={{
@@ -188,11 +194,12 @@ const MultiOptionNode = ({ data, id, onDelete }) => {
             color: '#b0b0b0',
             display: 'flex',
             alignItems: 'center',
-            padding: 0
+            padding: 0,
+            fontSize: '12px'
           }}
           title="Delete node"
         >
-          <DeleteOutlineIcon fontSize="small" />
+          <DeleteOutlineIcon sx={{ fontSize: '14px' }} />
         </button>
       </div>
 

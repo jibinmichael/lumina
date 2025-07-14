@@ -22,8 +22,10 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
         const lastModified = new Date(activeBoard.lastModified)
         const diffInSeconds = Math.floor((now - lastModified) / 1000)
         
-        if (diffInSeconds < 60) {
-          setTimeAgo(`updated ${diffInSeconds} seconds ago`)
+        if (diffInSeconds < 10) {
+          setTimeAgo('just now')
+        } else if (diffInSeconds < 60) {
+          setTimeAgo('few seconds ago')
         } else if (diffInSeconds < 3600) {
           const minutes = Math.floor(diffInSeconds / 60)
           setTimeAgo(`updated ${minutes} minute${minutes > 1 ? 's' : ''} ago`)

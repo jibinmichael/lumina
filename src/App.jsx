@@ -128,6 +128,13 @@ function AppContent() {
   // Side panel state
   const [sidePanelOpen, setSidePanelOpen] = useState(false)
 
+  // Add scrollToNodeByRefId function
+  const scrollToNodeByRefId = useCallback((refId) => {
+    const node = nodes.find(n => n.data?.refId === refId)
+    if (node) {
+      setCenter(node.position.x, node.position.y, { zoom: 1.2, duration: 800 })
+    }
+  }, [nodes, setCenter])
 
 
   // Initialize storage systems silently in background
@@ -707,6 +714,7 @@ function AppContent() {
         activeBoard={activeBoard}
         onBoardUpdate={handleBoardUpdate}
         nodes={nodes}
+        scrollToNodeByRefId={scrollToNodeByRefId}
       />
     </Box>
   )

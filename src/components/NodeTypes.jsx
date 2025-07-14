@@ -235,8 +235,23 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
       onMouseLeave={handleMouseLeave}
     >
       <div className="node-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span className="node-icon">{data.icon || icon}</span>
-        <h3 style={{ flex: 1, margin: 0, fontSize: '14px', fontWeight: 500 }}>{data.label || title}</h3>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: !isSeed ? '#f5f5f5' : 'transparent',
+          padding: !isSeed ? '4px 8px' : '0',
+          borderRadius: !isSeed ? '6px' : '0',
+          width: !isSeed ? 'fit-content' : 'auto'
+        }}>
+          <span className="node-icon" style={{ fontSize: !isSeed ? '12px' : 'inherit' }}>{data.icon || icon}</span>
+          <h3 style={{ 
+            margin: 0, 
+            fontSize: !isSeed ? '12px' : '14px', 
+            fontWeight: 500,
+            color: !isSeed ? '#666' : '#374151'
+          }}>{data.label || title}</h3>
+        </div>
         {/* Delete button, only if not seed node */}
         {!isSeed && (
           <button
@@ -249,11 +264,12 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
               color: '#b0b0b0',
               display: 'flex',
               alignItems: 'center',
-              padding: 0
+              padding: 0,
+              fontSize: '12px'
             }}
             title="Delete node"
           >
-            <DeleteOutlineIcon fontSize="small" />
+            <DeleteOutlineIcon sx={{ fontSize: '14px' }} />
           </button>
         )}
       </div>
