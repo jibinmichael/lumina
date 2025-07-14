@@ -1,9 +1,10 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Handle, Position, useReactFlow } from '@xyflow/react'
 import useDynamicPlaceholder from '../hooks/useDynamicPlaceholder.js'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 
 // Base node component with shared functionality
-const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder, color }) => {
+const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder, color, onDelete, isSeed }) => {
   const textareaRef = useRef(null)
   const handleRef = useRef(null)
   const { getViewport, getNodes, setNodes } = useReactFlow()
@@ -233,10 +234,28 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="node-header">
+      <div className="node-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span className="node-icon">{data.icon || icon}</span>
-        <h3>{data.label || title}</h3>
-        {/* Reference ID hidden from UI but available for backend access */}
+        <h3 style={{ flex: 1, margin: 0, fontSize: '14px', fontWeight: 500 }}>{data.label || title}</h3>
+        {/* Delete button, only if not seed node */}
+        {!isSeed && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete?.(id); }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              marginLeft: 8,
+              color: '#b0b0b0',
+              display: 'flex',
+              alignItems: 'center',
+              padding: 0
+            }}
+            title="Delete node"
+          >
+            <DeleteOutlineIcon fontSize="small" />
+          </button>
+        )}
       </div>
       <div className="node-input" onClick={(e) => e.stopPropagation()}>
         <textarea 

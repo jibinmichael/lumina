@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Handle, Position, useReactFlow } from '@xyflow/react'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 
-const GeneratedNode = ({ data, onPopoverOpen, id }) => {
+const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
   const textareaRef = useRef(null)
   const handleRef = useRef(null)
   const { getViewport, getNodes, setNodes } = useReactFlow()
@@ -221,17 +222,37 @@ const GeneratedNode = ({ data, onPopoverOpen, id }) => {
     }}>
       {/* Heading */}
       <div style={{
-        marginBottom: '12px'
+        marginBottom: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
         <h3 style={{
           margin: 0,
           fontSize: '14px',
           fontWeight: 500,
           color: '#374151',
-          lineHeight: 1.3
+          lineHeight: 1.3,
+          flex: 1
         }}>
           {data.heading || data.label || 'Generated Node'}
         </h3>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete?.(id); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 8,
+            color: '#b0b0b0',
+            display: 'flex',
+            alignItems: 'center',
+            padding: 0
+          }}
+          title="Delete node"
+        >
+          <DeleteOutlineIcon fontSize="small" />
+        </button>
       </div>
 
       {/* Input Area */}

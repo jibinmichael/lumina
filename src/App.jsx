@@ -29,18 +29,18 @@ import './styles/seednode.css'
 import './styles/popover.css'
 
 // Custom node types with props
-const createNodeTypes = (onPopoverOpen, onMultiOptionClick) => ({
-  seed: (props) => <SeedNode {...props} onPopoverOpen={onPopoverOpen} />,
-  question: (props) => <QuestionNode {...props} onPopoverOpen={onPopoverOpen} />,
-  teach: (props) => <TeachNode {...props} onPopoverOpen={onPopoverOpen} />,
-  rabbithole: (props) => <RabbitholeNode {...props} onPopoverOpen={onPopoverOpen} />,
-  summarize: (props) => <SummarizeNode {...props} onPopoverOpen={onPopoverOpen} />,
-  ideate: (props) => <IdeateNode {...props} onPopoverOpen={onPopoverOpen} />,
-  analyze: (props) => <AnalyzeNode {...props} onPopoverOpen={onPopoverOpen} />,
-  custom: (props) => <CustomNode {...props} onPopoverOpen={onPopoverOpen} />,
-  decision: (props) => <DecisionNode {...props} onPopoverOpen={onPopoverOpen} />,
-  'multi-option': (props) => <MultiOptionNode {...props} data={{...props.data, onOptionClick: onMultiOptionClick}} />,
-  generated: (props) => <GeneratedNode {...props} onPopoverOpen={onPopoverOpen} />
+const createNodeTypes = (onPopoverOpen, onMultiOptionClick, onDelete) => ({
+  seed: (props) => <SeedNode {...props} onPopoverOpen={onPopoverOpen} isSeed={true} />, // No delete for seed
+  question: (props) => <QuestionNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  teach: (props) => <TeachNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  rabbithole: (props) => <RabbitholeNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  summarize: (props) => <SummarizeNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  ideate: (props) => <IdeateNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  analyze: (props) => <AnalyzeNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  custom: (props) => <CustomNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  decision: (props) => <DecisionNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} isSeed={false} />, 
+  'multi-option': (props) => <MultiOptionNode {...props} data={{...props.data, onOptionClick: onMultiOptionClick}} onDelete={onDelete} />, 
+  generated: (props) => <GeneratedNode {...props} onPopoverOpen={onPopoverOpen} onDelete={onDelete} />
 })
 
 // Initial nodes template
@@ -529,10 +529,24 @@ function AppContent() {
     console.log('🆕 Created new node:', newNode)
   }, [nodes, edges, popover.sourceNodeId, setNodes, setEdges, handlePopoverClose, generateRefId, autoSaveNodes])
 
+  // Node delete handler
+  const handleDeleteNode = useCallback((nodeId) => {
+    setNodes((prevNodes) => {
+      // Don't allow deleting the seed node (id === '1')
+      if (nodeId === '1') return prevNodes
+      const updatedNodes = prevNodes.filter((n) => n.id !== nodeId)
+      setEdges((prevEdges) => prevEdges.filter((e) => e.source !== nodeId && e.target !== nodeId))
+      // Auto-save after deletion
+      setTimeout(() => autoSaveNodes(updatedNodes, edges), 0)
+      // Optionally, clear side panel if selected node was deleted (not shown here)
+      return updatedNodes
+    })
+  }, [setNodes, setEdges, autoSaveNodes, edges])
+
   // Dynamic node types with popover and multi-option handlers (memoized)
   const nodeTypes = useMemo(
-    () => createNodeTypes(handlePopoverOpen, handleMultiOptionClick),
-    [handlePopoverOpen, handleMultiOptionClick]
+    () => createNodeTypes(handlePopoverOpen, handleMultiOptionClick, handleDeleteNode),
+    [handlePopoverOpen, handleMultiOptionClick, handleDeleteNode]
   )
 
   // Initialize on mount

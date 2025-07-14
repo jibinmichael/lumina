@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react'
 import { Handle, Position } from '@xyflow/react'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 
-const MultiOptionNode = ({ data, id }) => {
+const MultiOptionNode = ({ data, id, onDelete }) => {
   const [selectedButtons, setSelectedButtons] = useState(new Set())
   const handleRef = useRef(null)
 
@@ -158,7 +159,10 @@ const MultiOptionNode = ({ data, id }) => {
     }}>
       {/* Title */}
       <div style={{
-        marginBottom: '16px'
+        marginBottom: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
         <h3 style={{
           margin: 0,
@@ -168,11 +172,28 @@ const MultiOptionNode = ({ data, id }) => {
           lineHeight: 1.3,
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '8px',
+          flex: 1
         }}>
           <span style={{ fontSize: '16px' }}>{emoji}</span>
           {data.label || 'Choose an option...'}
         </h3>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete?.(id); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 8,
+            color: '#b0b0b0',
+            display: 'flex',
+            alignItems: 'center',
+            padding: 0
+          }}
+          title="Delete node"
+        >
+          <DeleteOutlineIcon fontSize="small" />
+        </button>
       </div>
 
       {/* Option Buttons */}
