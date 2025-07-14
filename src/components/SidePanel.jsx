@@ -393,6 +393,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
   const renderAnimatedStatus = () => {
     const hasContent = nodes && nodes.filter(n => n.data?.content?.trim()).length >= 2
     const isProcessing = synthesis.status === 'processing'
+    const isWaiting = synthesis.status === 'waiting'
     
     if (!aiService.hasApiKey()) {
       return (
@@ -430,6 +431,25 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
       )
     }
 
+    if (isWaiting) {
+      return (
+        <Box sx={{ px: 0, pt: 2, pb: 1 }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#8b5cf6',
+              fontSize: '13px',
+              fontWeight: 400,
+              pl: 0, // Ensure no extra left padding
+              fontStyle: 'italic',
+            }}
+          >
+            mapping your beautiful pathway...
+          </Typography>
+        </Box>
+      )
+    }
+
     if (isProcessing) {
       return (
         <Box sx={{ px: 1.5, pt: 2, pb: 1, display: 'flex', alignItems: 'center', gap: 1, position: 'relative', overflow: 'visible' }}>
@@ -452,7 +472,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
                 }
               }}
             >
-              <span className="shimmer">synthesising your ideas</span>
+              <span className="shimmer">creating your journey pathway</span>
             </Typography>
           </Box>
         </Box>

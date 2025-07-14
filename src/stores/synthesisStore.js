@@ -4,7 +4,9 @@ import aiService from '../services/aiService.js'
 const SYNTHESIS_CONFIG = {
   STORAGE_PREFIX: 'lumina_synthesis_',
   DEBOUNCE_DELAY: 500, // 500ms as per tech guidelines
-  MIN_NODES_FOR_SYNTHESIS: 2
+  MIN_NODES_FOR_SYNTHESIS: 2,
+  COMPLETION_WAIT_TIME: 10000, // 10 seconds of inactivity to consider "completion"
+  MIN_NODES_FOR_COMPLETION: 3 // Minimum nodes to consider a journey complete
 }
 
 class SynthesisStore {
@@ -13,6 +15,8 @@ class SynthesisStore {
     this.status = new Map() // boardId -> status
     this.errors = new Map() // boardId -> error message
     this.debounceTimers = new Map() // boardId -> timer
+    this.completionTimers = new Map() // boardId -> completion timer
+    this.lastActivity = new Map() // boardId -> last activity timestamp
     this.listeners = new Set()
     this.isEnabled = true
   }
@@ -72,16 +76,20 @@ class SynthesisStore {
     }
   }
 
-  // Update synthesis for a board (debounced)
+  // Update synthesis for a board (wait for completion approach)
   async updateSynthesis(boardId, nodes) {
     if (!this.isEnabled || !boardId || !nodes) {
       return
     }
 
-    // Clear existing timer
+    // Clear existing timers
     const existingTimer = this.debounceTimers.get(boardId)
+    const existingCompletionTimer = this.completionTimers.get(boardId)
     if (existingTimer) {
       clearTimeout(existingTimer)
+    }
+    if (existingCompletionTimer) {
+      clearTimeout(existingCompletionTimer)
     }
 
     // Check if we have minimum nodes
@@ -93,20 +101,36 @@ class SynthesisStore {
       return
     }
 
-    // Set processing status immediately
-    this.status.set(boardId, 'processing')
-    this.notifyListeners(boardId, 'processing')
+    // Update last activity
+    this.lastActivity.set(boardId, Date.now())
 
-    // Debounce the actual synthesis
-    const timer = setTimeout(async () => {
-      await this.performSynthesis(boardId, nodes)
-    }, SYNTHESIS_CONFIG.DEBOUNCE_DELAY)
+    // Check if we have enough nodes for a complete journey
+    if (nodesWithContent.length >= SYNTHESIS_CONFIG.MIN_NODES_FOR_COMPLETION) {
+      // Set up completion timer - wait for user to finish their work
+      const completionTimer = setTimeout(async () => {
+        await this.performJourneySynthesis(boardId, nodes)
+      }, SYNTHESIS_CONFIG.COMPLETION_WAIT_TIME)
 
-    this.debounceTimers.set(boardId, timer)
+      this.completionTimers.set(boardId, completionTimer)
+      
+      // Set status to waiting for completion
+      this.status.set(boardId, 'waiting')
+      this.notifyListeners(boardId, 'waiting')
+    } else {
+      // For smaller sets, use traditional debounced approach
+      this.status.set(boardId, 'processing')
+      this.notifyListeners(boardId, 'processing')
+
+      const timer = setTimeout(async () => {
+        await this.performJourneySynthesis(boardId, nodes)
+      }, SYNTHESIS_CONFIG.DEBOUNCE_DELAY)
+
+      this.debounceTimers.set(boardId, timer)
+    }
   }
 
-  // Perform the actual synthesis
-  async performSynthesis(boardId, nodes) {
+  // Perform journey synthesis (new approach)
+  async performJourneySynthesis(boardId, nodes) {
     try {
       // Check if AI service is initialized
       if (!aiService.isInitialized) {
@@ -126,7 +150,17 @@ class SynthesisStore {
         }
       }
 
-      // Generate synthesis
+      // Check if user is still active
+      const lastActivity = this.lastActivity.get(boardId) || 0
+      const timeSinceActivity = Date.now() - lastActivity
+      
+      // If user has been active recently, don't generate synthesis yet
+      if (timeSinceActivity < SYNTHESIS_CONFIG.COMPLETION_WAIT_TIME) {
+        console.log('User still active, waiting for completion...')
+        return
+      }
+
+      // Generate journey pathway
       const result = await aiService.generateSynthesis(nodes)
       
       if (result.success) {
@@ -141,7 +175,7 @@ class SynthesisStore {
         this.notifyListeners(boardId, 'error')
       }
     } catch (error) {
-      console.error('Synthesis error:', error)
+      console.error('Journey synthesis error:', error)
       this.status.set(boardId, 'error')
       this.errors.set(boardId, error.message)
       this.notifyListeners(boardId, 'error')
@@ -194,7 +228,9 @@ class SynthesisStore {
   cleanup() {
     // Clear all timers
     this.debounceTimers.forEach(timer => clearTimeout(timer))
+    this.completionTimers.forEach(timer => clearTimeout(timer))
     this.debounceTimers.clear()
+    this.completionTimers.clear()
     
     // Clear listeners
     this.listeners.clear()
