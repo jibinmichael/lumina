@@ -170,7 +170,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
             cursor: 'default',
           }}
         >
-          My boards
+          My thoughtscapes
         </Typography>
         <Typography
           variant="body2"
@@ -248,7 +248,7 @@ function NotionHeader({ activeBoard, onBoardUpdate, onSidePanelOpen, onGoHome })
         </Typography>
 
         <Tooltip 
-          title={synthesisReady ? "Open AI synthesis" : "Add more content to enable synthesis"} 
+          title={synthesisReady ? "Open AI synthesis" : "Pour in your ideas to start synthesis"} 
           placement="bottom"
         >
           <span> {/* Wrapper for disabled button tooltip */}

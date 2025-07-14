@@ -107,7 +107,7 @@ const HomePage = ({ onStartThinking, onSelectBoard }) => {
               color: '#333333',
             }}
           >
-            My boards
+            My thoughtscapes
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
