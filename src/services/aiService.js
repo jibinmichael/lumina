@@ -91,12 +91,25 @@ class AIService {
       }
 
       // Prepare node data for AI
-      const nodeData = nodesWithContent.map(node => ({
-        id: node.data.refId || node.id,
-        type: node.type,
-        content: node.data.content,
-        timestamp: node.data.timestamp || Date.now()
-      }))
+      const nodeData = nodesWithContent.map(node => {
+        const fullContent = node.data.content
+        let snippet = fullContent
+        if (fullContent.length > 200) {
+          // Try to extract the first sentence, or fallback to first 100 chars
+          const firstSentenceMatch = fullContent.match(/^(.*?[.!?])\s/)
+          if (firstSentenceMatch && firstSentenceMatch[1].length <= 120) {
+            snippet = firstSentenceMatch[1]
+          } else {
+            snippet = fullContent.slice(0, 100) + '...'
+          }
+        }
+        return {
+          id: node.data.refId || node.id,
+          type: node.type,
+          content: snippet,
+          timestamp: node.data.timestamp || Date.now()
+        }
+      })
 
       // Make API call
       this.requestTimestamps.push(Date.now())

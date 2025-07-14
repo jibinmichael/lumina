@@ -59,7 +59,7 @@ const renderSynthesisContentWithLinks = (content, scrollToNodeByRefId) => {
 }
 
 // Helper to render synthesis content as separate items with per-line citations
-const renderSynthesisItemsWithCitations = (content, scrollToNodeByRefId) => {
+const renderSynthesisItemsWithCitations = (content, nodes, scrollToNodeByRefId) => {
   if (!content) return null
   const lines = content.split(/\n+/).filter(line => line.trim())
   const nodeIdRegex = /N\d{3}/g
@@ -68,6 +68,17 @@ const renderSynthesisItemsWithCitations = (content, scrollToNodeByRefId) => {
     const nodeIds = [...line.matchAll(nodeIdRegex)].map(match => match[0])
     let displayLine = line.replace(nodeIdRegex, '').replace(/\(\s*\)/g, '').trim()
     if (isHeading) displayLine = displayLine.replace(/^###\s+/, '')
+
+    // If no nodeId found and not a heading, try to infer from node content
+    let inferredNodeId = null
+    if (nodeIds.length === 0 && !isHeading && displayLine.length > 0 && nodes) {
+      // Try to find a node whose content matches the start of the displayLine (snippet match)
+      const match = nodes.find(n => n.data?.content && displayLine && n.data.content.trim().startsWith(displayLine))
+      if (match && match.data.refId) {
+        inferredNodeId = match.data.refId
+      }
+    }
+
     return (
       <div
         key={idx}
@@ -109,6 +120,15 @@ const renderSynthesisItemsWithCitations = (content, scrollToNodeByRefId) => {
                   {refId}
                 </span>
               ))}
+            </span>
+          )}
+          {inferredNodeId && (
+            <span style={{ marginLeft: 6, color: '#b5b5c3', cursor: 'pointer', fontSize: '12px', fontWeight: 300, textDecoration: 'underline', userSelect: 'none' }}
+              onClick={() => scrollToNodeByRefId?.(inferredNodeId)}
+              onMouseOver={e => (e.currentTarget.style.color = '#8b5cf6')}
+              onMouseOut={e => (e.currentTarget.style.color = '#b5b5c3')}
+            >
+              {inferredNodeId}
             </span>
           )}
         </span>
@@ -360,7 +380,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
       return (
         <Box sx={{ px: 0, py: 0, flex: 1, overflowY: 'auto', width: '100%' }}>
           <div style={{ padding: '16px 0 0 0', width: '100%' }}>
-            {renderSynthesisItemsWithCitations(synthesis.content, scrollToNodeByRefId)}
+            {renderSynthesisItemsWithCitations(synthesis.content, nodes, scrollToNodeByRefId)}
           </div>
         </Box>
       )
