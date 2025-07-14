@@ -58,80 +58,95 @@ const renderSynthesisContentWithLinks = (content, scrollToNodeByRefId) => {
   return parts
 }
 
-// Helper to render synthesis content as separate items with per-line citations
-const renderSynthesisItemsWithCitations = (content, nodes, scrollToNodeByRefId) => {
+// Helper to render synthesis content as a flowing narrative note
+const renderSynthesisAsNarrative = (content, nodes, scrollToNodeByRefId) => {
   if (!content) return null
-  const lines = content.split(/\n+/).filter(line => line.trim())
+  
+  // Split content into paragraphs
+  const paragraphs = content.split(/\n\s*\n/).filter(para => para.trim())
   const nodeIdRegex = /N\d{3}/g
-  return lines.map((line, idx) => {
-    const isHeading = /^###\s+/.test(line)
-    const nodeIds = [...line.matchAll(nodeIdRegex)].map(match => match[0])
-    let displayLine = line.replace(nodeIdRegex, '').replace(/\(\s*\)/g, '').trim()
-    if (isHeading) displayLine = displayLine.replace(/^###\s+/, '')
-
-    // If no nodeId found and not a heading, try to infer from node content
-    let inferredNodeId = null
-    if (nodeIds.length === 0 && !isHeading && displayLine.length > 0 && nodes) {
-      // Try to find a node whose content matches the start of the displayLine (snippet match)
-      const match = nodes.find(n => n.data?.content && displayLine && n.data.content.trim().startsWith(displayLine))
-      if (match && match.data.refId) {
-        inferredNodeId = match.data.refId
-      }
+  
+  return paragraphs.map((paragraph, idx) => {
+    const nodeIds = [...paragraph.matchAll(nodeIdRegex)].map(match => match[0])
+    let displayText = paragraph.replace(nodeIdRegex, '').replace(/\(\s*\)/g, '').trim()
+    
+    // If no nodeIds found, try to infer from node content
+    let inferredNodeIds = []
+    if (nodeIds.length === 0 && displayText.length > 0 && nodes) {
+      // Try to find nodes whose content matches parts of the displayText
+      nodes.forEach(n => {
+        if (n.data?.content && displayText.includes(n.data.content.trim().substring(0, 20))) {
+          if (n.data.refId) {
+            inferredNodeIds.push(n.data.refId)
+          }
+        }
+      })
     }
 
     return (
-      <div
-        key={idx}
-        style={{
-          display: 'flex',
-          alignItems: isHeading ? 'flex-end' : 'baseline',
-          marginBottom: isHeading ? 10 : 6,
-          marginTop: isHeading ? 22 : 0,
-        }}
-      >
-        <span
-          style={{
-            fontSize: isHeading ? '15.5px' : '14px',
-            color: isHeading ? '#1f2937' : '#374151',
-            fontWeight: isHeading ? 700 : 400,
-            letterSpacing: isHeading ? '0.01em' : undefined,
-            flex: 1,
-          }}
-        >
-          {displayLine}
-          {nodeIds.length > 0 && !isHeading && (
-            <span style={{ marginLeft: 6, display: 'inline-flex', gap: 4 }}>
-              {nodeIds.map((refId, i) => (
-                <span
-                  key={refId + i}
-                  onClick={() => scrollToNodeByRefId?.(refId)}
-                  style={{
-                    color: '#b5b5c3',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: 300,
-                    textDecoration: 'underline',
-                    marginLeft: i > 0 ? 4 : 0,
-                    userSelect: 'none',
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.color = '#8b5cf6')}
-                  onMouseOut={e => (e.currentTarget.style.color = '#b5b5c3')}
-                >
-                  {refId}
+      <div key={idx} style={{ 
+        marginBottom: 16, 
+        lineHeight: '1.6',
+        fontSize: '14px',
+        color: '#374151',
+        fontWeight: 400
+      }}>
+        <span style={{ display: 'inline' }}>
+          {displayText.split(/(?=\(See: N\d{3}\))/).map((part, partIdx) => {
+            const citationMatch = part.match(/\(See: (N\d{3})\)/)
+            if (citationMatch) {
+              const refId = citationMatch[1]
+              const textBeforeCitation = part.replace(/\(See: N\d{3}\)/, '')
+              return (
+                <span key={partIdx}>
+                  {textBeforeCitation}
+                  <span
+                    onClick={() => scrollToNodeByRefId?.(refId)}
+                    style={{
+                      color: '#8b5cf6',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      textDecoration: 'underline',
+                      userSelect: 'none',
+                      marginLeft: 4,
+                    }}
+                    onMouseOver={e => (e.currentTarget.style.color = '#7c3aed')}
+                    onMouseOut={e => (e.currentTarget.style.color = '#8b5cf6')}
+                  >
+                    {refId}
+                  </span>
                 </span>
-              ))}
-            </span>
-          )}
-          {inferredNodeId && (
-            <span style={{ marginLeft: 6, color: '#b5b5c3', cursor: 'pointer', fontSize: '12px', fontWeight: 300, textDecoration: 'underline', userSelect: 'none' }}
-              onClick={() => scrollToNodeByRefId?.(inferredNodeId)}
-              onMouseOver={e => (e.currentTarget.style.color = '#8b5cf6')}
-              onMouseOut={e => (e.currentTarget.style.color = '#b5b5c3')}
-            >
-              {inferredNodeId}
-            </span>
-          )}
+              )
+            }
+            return <span key={partIdx}>{part}</span>
+          })}
         </span>
+        {(nodeIds.length > 0 || inferredNodeIds.length > 0) && (
+          <div style={{ marginTop: 8, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {(nodeIds.length > 0 ? nodeIds : inferredNodeIds).map((refId, i) => (
+              <span
+                key={refId + i}
+                onClick={() => scrollToNodeByRefId?.(refId)}
+                style={{
+                  color: '#b5b5c3',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 300,
+                  textDecoration: 'underline',
+                  userSelect: 'none',
+                  padding: '2px 6px',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '4px',
+                }}
+                onMouseOver={e => (e.currentTarget.style.color = '#8b5cf6')}
+                onMouseOut={e => (e.currentTarget.style.color = '#b5b5c3')}
+              >
+                {refId}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     )
   })
@@ -380,7 +395,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
       return (
         <Box sx={{ px: 0, py: 0, flex: 1, overflowY: 'auto', width: '100%' }}>
           <div style={{ padding: '16px 0 0 0', width: '100%' }}>
-            {renderSynthesisItemsWithCitations(synthesis.content, nodes, scrollToNodeByRefId)}
+            {renderSynthesisAsNarrative(synthesis.content, nodes, scrollToNodeByRefId)}
           </div>
         </Box>
       )
@@ -472,7 +487,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
                 }
               }}
             >
-              <span className="shimmer">creating your journey pathway</span>
+              <span className="shimmer">crafting your journey note</span>
             </Typography>
           </Box>
         </Box>
