@@ -7,38 +7,29 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
   const { getViewport, getNodes, setNodes } = useReactFlow()
   const [content, setContent] = useState(data.content || '')
 
-  // Lightweight auto-resize function with micro-debounce
-  const resizeTimeoutRef = useRef(null)
-  
+  // Simplified auto-resize function
   const autoResize = useCallback(() => {
-    // Clear any pending resize to avoid excessive calls
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current)
-    }
-    
-    resizeTimeoutRef.current = setTimeout(() => {
-      const textarea = textareaRef.current
-      if (textarea) {
-        // Reset height to auto to get the actual scroll height
-        textarea.style.height = 'auto'
-        
-        // Calculate the new height based on content
-        const scrollHeight = textarea.scrollHeight
-        const minHeight = 24 // Minimum height
-        const maxHeight = 400 // Maximum height before showing scroll
-        
-        // Set the height to fit content, within min/max bounds
-        const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
-        textarea.style.height = newHeight + 'px'
-        
-        // If content exceeds max height, enable scrolling
-        if (scrollHeight > maxHeight) {
-          textarea.style.overflowY = 'auto'
-        } else {
-          textarea.style.overflowY = 'hidden'
-        }
+    const textarea = textareaRef.current
+    if (textarea) {
+      // Reset height to auto to get the actual scroll height
+      textarea.style.height = 'auto'
+      
+      // Calculate the new height based on content
+      const scrollHeight = textarea.scrollHeight
+      const minHeight = 24 // Minimum height
+      const maxHeight = 800 // Increased max height for better usability
+      
+      // Set the height to fit content, within min/max bounds
+      const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
+      textarea.style.height = newHeight + 'px'
+      
+      // If content exceeds max height, enable scrolling
+      if (scrollHeight > maxHeight) {
+        textarea.style.overflowY = 'auto'
+      } else {
+        textarea.style.overflowY = 'hidden'
       }
-    }, 10) // Very short delay to batch resize calls
+    }
   }, [])
 
   // Lightweight update for seamless typing
@@ -77,7 +68,7 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
         return node
       })
       setNodes(updatedNodes)
-    }, 1000) // Longer delay to avoid disrupting typing
+    }, 2000) // Increased delay to avoid disrupting typing
   }, [autoResize, id, getNodes, setNodes, data])
 
   // Handle blur (when clicking outside) - ensure data is saved immediately
@@ -110,15 +101,17 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
     setNodes(updatedNodes)
   }, [content, data, id, getNodes, setNodes])
 
-  // Simplified input handler - no longer needed since we handle resize in onChange
+  // Simplified input handler for resize
   const handleInput = useCallback((e) => {
-    // Minimal resize check only if needed
-    autoResize()
+    // Trigger resize on input for immediate feedback
+    requestAnimationFrame(() => {
+      autoResize()
+    })
   }, [autoResize])
 
-  // Remove keydown handler - onChange handles all resize needs
+  // Handle keydown for better responsiveness
   const handleKeyDown = useCallback((e) => {
-    // No resize handling - let onChange handle everything for seamless typing
+    // Allow normal typing behavior
   }, [])
 
   // Initial resize and resize on content changes
@@ -136,14 +129,11 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
     return () => window.removeEventListener('resize', handleWindowResize)
   }, [autoResize])
 
-  // Cleanup all timeouts on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (debouncedSaveRef.current) {
         clearTimeout(debouncedSaveRef.current)
-      }
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current)
       }
     }
   }, [])
@@ -243,12 +233,15 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
             resize: 'none',
             fontFamily: 'inherit',
             fontSize: '13px',
-            lineHeight: '1.4',
+            lineHeight: '1.6',
             color: '#374151',
             minHeight: '24px',
+            maxHeight: '800px',
             overflowY: 'hidden',
             background: 'transparent',
-            padding: '4px 0'
+            padding: '4px 0',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word'
           }}
         />
       </div>
