@@ -466,7 +466,7 @@ const SidePanel = ({ isOpen, onClose, activeBoard, onBoardUpdate, nodes, scrollT
 
     if (isProcessing) {
       return (
-        <Box sx={{ px: 1.5, pt: 2, pb: 1, display: 'flex', alignItems: 'center', gap: 1, position: 'relative', overflow: 'visible' }}>
+        <Box sx={{ px: 0, pt: 2, pb: 1, display: 'flex', alignItems: 'center', gap: 1, position: 'relative', overflow: 'visible' }}>
           <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <CircularProgress size={12} sx={{ color: '#8b5cf6', mr: 1, zIndex: 2 }} thickness={5} />
             <Typography 

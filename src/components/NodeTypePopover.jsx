@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
-const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
+const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId, selectedNodeTypes = [] }) => {
   const [showAllSections, setShowAllSections] = useState(false)
   const popoverRef = useRef(null)
   
@@ -78,6 +78,19 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
 
   // Get sections to display
   const sectionsToShow = showAllSections ? menuStructure : menuStructure.slice(0, 2)
+
+  // Check if a node type is selected
+  const isNodeTypeSelected = (item) => {
+    const nodeType = item.multiType || item.nodeType
+    return selectedNodeTypes.includes(nodeType)
+  }
+
+  // Get node type color for highlighting
+  const getNodeTypeColor = (item) => {
+    const nodeType = item.multiType || item.nodeType
+    const nodeTypeDef = nodeTypeDefinitions[nodeType]
+    return nodeTypeDef?.color || '#8b5cf6'
+  }
 
   // Handle item selection
   const handleItemSelect = (item, event) => {
@@ -184,20 +197,36 @@ const NodeTypePopover = ({ position, onSelect, onClose, sourceNodeId }) => {
                   cursor: 'pointer',
                   borderRadius: '4px',
                   fontSize: '13px',
-                  transition: 'background-color 0.1s ease',
-                  color: '#374151',
+                  transition: 'all 0.1s ease',
+                  color: isNodeTypeSelected(item) ? '#ffffff' : '#374151',
                   userSelect: 'none',
                   marginLeft: '4px',
                   marginRight: '4px',
-                  position: 'relative'
+                  position: 'relative',
+                  background: isNodeTypeSelected(item) ? getNodeTypeColor(item) : 'transparent',
+                  border: isNodeTypeSelected(item) ? `1px solid ${getNodeTypeColor(item)}` : '1px solid transparent'
                 }}
               >
-                <span style={{ fontSize: '14px', marginRight: '8px' }}>
+                <span style={{ 
+                  fontSize: '14px', 
+                  marginRight: '8px',
+                  color: isNodeTypeSelected(item) ? '#ffffff' : 'inherit'
+                }}>
                   {item.icon || nodeTypeDef?.icon || '⚙️'}
                 </span>
-                <span style={{ flex: 1, color: '#374151' }}>
+                <span style={{ flex: 1, color: isNodeTypeSelected(item) ? '#ffffff' : '#374151' }}>
                   {item.label}
                 </span>
+                {isNodeTypeSelected(item) && (
+                  <span style={{
+                    fontSize: '10px',
+                    color: '#ffffff',
+                    fontWeight: '500',
+                    marginLeft: '4px'
+                  }}>
+                    ✓
+                  </span>
+                )}
               </div>
             )
           })}

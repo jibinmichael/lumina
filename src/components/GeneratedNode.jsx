@@ -1,6 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Handle, Position, useReactFlow } from '@xyflow/react'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import EditIcon from '@mui/icons-material/Edit'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 
 const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
   const textareaRef = useRef(null)
@@ -122,6 +124,14 @@ const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
     // No resize handling - let onChange handle everything for seamless typing
   }, [])
 
+  // Handle edit button click
+  const handleEditClick = useCallback((e) => {
+    e.stopPropagation()
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [])
+
   // Initial resize and resize on content changes
   useEffect(() => {
     autoResize()
@@ -211,15 +221,32 @@ const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
   }
 
   return (
-    <div className="generated-node" style={{
-      background: '#ffffff',
-      border: '1px solid #e5e7eb',
-      borderRadius: '12px',
-      padding: '16px',
-      minWidth: '200px',
-      maxWidth: '300px',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    }}>
+    <div style={{ position: 'relative' }}>
+      {/* Drag Handle - positioned above the node */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: '-20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          cursor: 'grab'
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        title="Drag to move node"
+      >
+        <DragIndicatorIcon sx={{ fontSize: '16px', color: '#9ca3af', transform: 'rotate(90deg)' }} />
+      </div>
+      
+      <div className="generated-node" style={{
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '16px',
+        minWidth: '200px',
+        maxWidth: '300px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      }}>
       {/* Heading */}
       <div style={{
         marginBottom: '12px',
@@ -246,13 +273,31 @@ const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
             {data.heading || data.label || 'Generated Node'}
           </h3>
         </div>
+        {/* Edit button */}
+        <button
+          onClick={handleEditClick}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 0,
+            color: '#b0b0b0',
+            display: 'flex',
+            alignItems: 'center',
+            padding: 0,
+            fontSize: '12px'
+          }}
+          title="Edit content"
+        >
+          <EditIcon sx={{ fontSize: '14px' }} />
+        </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete?.(id); }}
           style={{
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            marginLeft: 8,
+            marginLeft: 2,
             color: '#b0b0b0',
             display: 'flex',
             alignItems: 'center',
@@ -266,16 +311,13 @@ const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
       </div>
 
       {/* Input Area */}
-      <div className="node-input" onClick={(e) => e.stopPropagation()}>
+      <div className="node-input">
         <textarea 
           ref={textareaRef}
           placeholder={data.placeholder || "Write your thought or insight here..."}
           value={content}
           onChange={handleTextChange}
           onBlur={handleBlur}
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           style={{
@@ -289,7 +331,9 @@ const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
             background: 'transparent',
             minHeight: '24px',
             overflowY: 'hidden',
-            fontFamily: 'inherit'
+            fontFamily: 'inherit',
+            cursor: 'text',
+            pointerEvents: 'auto'
           }}
         />
       </div>
@@ -321,6 +365,7 @@ const GeneratedNode = ({ data, onPopoverOpen, id, onDelete }) => {
         }}
         className="custom-handle"
       />
+    </div>
     </div>
   )
 }

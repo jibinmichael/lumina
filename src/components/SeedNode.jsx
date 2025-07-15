@@ -1,5 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Handle, Position, useReactFlow } from '@xyflow/react'
+import EditIcon from '@mui/icons-material/Edit'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 
 const SeedNode = ({ data, onPopoverOpen, id }) => {
   const textareaRef = useRef(null)
@@ -114,6 +116,14 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
     // Allow normal typing behavior
   }, [])
 
+  // Handle edit button click
+  const handleEditClick = useCallback((e) => {
+    e.stopPropagation()
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [])
+
   // Initial resize and resize on content changes
   useEffect(() => {
     autoResize()
@@ -206,15 +216,50 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
   }
 
   return (
-    <div className="seed-node">
+    <div style={{ position: 'relative' }}>
+      {/* Drag Handle - positioned above the node */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: '-20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          cursor: 'grab'
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        title="Drag to move node"
+      >
+        <DragIndicatorIcon sx={{ fontSize: '16px', color: '#9ca3af', transform: 'rotate(90deg)' }} />
+      </div>
+      
+      <div className="seed-node">
       <div className="node-header">
         <h3>Start Here</h3>
+        {/* Edit button */}
+        <button
+          onClick={handleEditClick}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 0,
+            color: '#b0b0b0',
+            display: 'flex',
+            alignItems: 'center',
+            padding: 0,
+            fontSize: '12px'
+          }}
+          title="Edit content"
+        >
+          <EditIcon sx={{ fontSize: '14px' }} />
+        </button>
         {/* Hide reference ID from display but keep in data for backend access */}
         {/* {data.refId && (
           <span className="node-ref-id">{data.refId}</span>
         )} */}
       </div>
-      <div className="node-input" onClick={(e) => e.stopPropagation()}>
+      <div className="node-input">
         <textarea 
           ref={textareaRef}
           placeholder="Capture a single thought, idea, or question..."
@@ -223,9 +268,6 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
           style={{
             width: '100%',
             border: 'none',
@@ -241,7 +283,9 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
             background: 'transparent',
             padding: '4px 0',
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
+            wordBreak: 'break-word',
+            cursor: 'text',
+            pointerEvents: 'auto'
           }}
         />
       </div>
@@ -254,6 +298,7 @@ const SeedNode = ({ data, onPopoverOpen, id }) => {
         className="custom-handle"
         onClick={handleClick}
       />
+    </div>
     </div>
   )
 }

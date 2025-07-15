@@ -2,6 +2,8 @@ import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Handle, Position, useReactFlow } from '@xyflow/react'
 import useDynamicPlaceholder from '../hooks/useDynamicPlaceholder.js'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import EditIcon from '@mui/icons-material/Edit'
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator'
 
 // Base node component with shared functionality
 const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder, color, onDelete, isSeed }) => {
@@ -126,6 +128,14 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
     // Allow normal typing behavior
   }, [])
 
+  // Handle edit button click
+  const handleEditClick = useCallback((e) => {
+    e.stopPropagation()
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [])
+
   // Initial resize and resize on content changes
   useEffect(() => {
     autoResize()
@@ -219,11 +229,28 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
   }
 
   return (
-    <div 
-      className={`base-node ${className}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div style={{ position: 'relative' }}>
+      {/* Drag Handle - positioned above the node */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: '-20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          cursor: 'grab'
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        title="Drag to move node"
+      >
+        <DragIndicatorIcon sx={{ fontSize: '16px', color: '#9ca3af', transform: 'rotate(90deg)' }} />
+      </div>
+      
+      <div 
+        className={`base-node ${className}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
       <div className="node-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{
           display: 'flex',
@@ -242,6 +269,25 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
             color: !isSeed ? '#666' : '#374151'
           }}>{data.label || title}</h3>
         </div>
+        {/* Edit button */}
+        <button
+          onClick={handleEditClick}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginLeft: 0,
+            color: '#b0b0b0',
+            display: 'flex',
+            alignItems: 'center',
+            padding: 0,
+            fontSize: '12px'
+          }}
+          title="Edit content"
+        >
+          <EditIcon sx={{ fontSize: '14px' }} />
+        </button>
+        
         {/* Delete button, only if not seed node */}
         {!isSeed && (
           <button
@@ -250,7 +296,7 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              marginLeft: 8,
+              marginLeft: 2,
               color: '#b0b0b0',
               display: 'flex',
               alignItems: 'center',
@@ -263,7 +309,7 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
           </button>
         )}
       </div>
-      <div className="node-input" onClick={(e) => e.stopPropagation()}>
+      <div className="node-input">
         <textarea 
           ref={textareaRef}
           placeholder={dynamicPlaceholder}
@@ -272,9 +318,6 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          onClick={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
           style={{
             width: '100%',
             border: 'none',
@@ -290,7 +333,9 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
             background: 'transparent',
             padding: '4px 0',
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
+            wordBreak: 'break-word',
+            cursor: 'text',
+            pointerEvents: 'auto'
           }}
         />
       </div>
@@ -318,6 +363,7 @@ const BaseNode = ({ data, onPopoverOpen, id, className, icon, title, placeholder
         }}
         className="custom-handle"
       />
+    </div>
     </div>
   )
 }

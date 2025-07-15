@@ -128,6 +128,9 @@ function AppContent() {
   // Side panel state
   const [sidePanelOpen, setSidePanelOpen] = useState(false)
 
+  // Track selected node types for each source node
+  const [selectedNodeTypes, setSelectedNodeTypes] = useState({})
+
   // Add scrollToNodeByRefId function
   const scrollToNodeByRefId = useCallback((refId) => {
     const node = nodes.find(n => n.data?.refId === refId)
@@ -135,6 +138,11 @@ function AppContent() {
       setCenter(node.position.x, node.position.y, { zoom: 1.2, duration: 800 })
     }
   }, [nodes, setCenter])
+
+  // Get selected node types for a specific source node
+  const getSelectedNodeTypesForSource = useCallback((sourceNodeId) => {
+    return selectedNodeTypes[sourceNodeId] || []
+  }, [selectedNodeTypes])
 
 
   // Initialize storage systems silently in background
@@ -481,6 +489,12 @@ function AppContent() {
     setNodes(updatedNodes)
     setEdges(updatedEdges)
     
+    // Track selected node type for this source node (multi-option nodes)
+    setSelectedNodeTypes(prev => ({
+      ...prev,
+      [parentNodeId]: [...(prev[parentNodeId] || []), 'multi-option']
+    }))
+    
     // Auto-save immediately for new nodes
     await autoSaveNodes(updatedNodes, updatedEdges)
     
@@ -528,6 +542,14 @@ function AppContent() {
     
     setNodes(updatedNodes)
     setEdges(updatedEdges)
+    
+    // Track selected node type for this source node
+    const nodeTypeKey = nodeType.multiType || nodeType.id
+    setSelectedNodeTypes(prev => ({
+      ...prev,
+      [popover.sourceNodeId]: [...(prev[popover.sourceNodeId] || []), nodeTypeKey]
+    }))
+    
     handlePopoverClose()
     
     // Auto-save immediately for new nodes
@@ -704,6 +726,7 @@ function AppContent() {
           sourceNodeId={popover.sourceNodeId}
           onSelect={handleNodeTypeSelect}
           onClose={handlePopoverClose}
+          selectedNodeTypes={getSelectedNodeTypesForSource(popover.sourceNodeId)}
         />
       )}
 
